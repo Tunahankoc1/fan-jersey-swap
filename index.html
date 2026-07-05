@@ -12,7 +12,7 @@ h1 { font-size: 28px; color: #a78bfa; text-align: center; margin-bottom: 5px; }
 .topbar { display: flex; justify-content: space-between; align-items: center; background: #13132b; border: 1px solid #2d2d5e; padding: 10px 20px; border-radius: 8px; margin-bottom: 20px; }
 button { padding: 10px 20px; background: #7c3aed; color: #ffffff; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; }
 button:hover { background: #6d28d9; }
-.tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+.tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
 .tab { padding: 10px 20px; background: #13132b; border: 1px solid #2d2d5e; cursor: pointer; border-radius: 6px; color: #7c7c9e; }
 .tab.active { background: #7c3aed; color: #ffffff; font-weight: bold; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
@@ -43,10 +43,21 @@ button:hover { background: #6d28d9; }
 .stats-bar { background: #13132b; border: 1px solid #2d2d5e; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; gap: 30px; font-size: 12px; flex-wrap: wrap; }
 .stat { text-align: center; }
 .stat-val { color: #a78bfa; font-weight: bold; font-size: 20px; }
-.live-bar { background: #13132b; border: 1px solid #2d2d5e; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; font-size: 11px; }
-.live-match { display: inline-block; margin-right: 20px; color: #e8e8f0; }
+.match-card { background: #13132b; border: 1px solid #2d2d5e; border-radius: 10px; padding: 15px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+.match-card.live { border-color: #10b981; }
+.match-card.upcoming { border-color: #7c3aed; }
+.match-card.finished { border-color: #374151; opacity: 0.8; }
+.match-teams { font-size: 14px; font-weight: bold; color: #e8e8f0; }
+.match-score { font-size: 20px; font-weight: bold; color: #a78bfa; text-align: center; min-width: 80px; }
+.match-info { font-size: 11px; color: #7c7c9e; text-align: right; }
+.match-status-live { color: #10b981; font-weight: bold; }
+.match-status-upcoming { color: #7c3aed; }
+.match-status-finished { color: #6b7280; }
 .live-dot { display: inline-block; width: 6px; height: 6px; background: #10b981; border-radius: 50%; margin-right: 4px; animation: pulse 1s infinite; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.filter-bar { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+.filter-btn { padding: 6px 14px; background: #13132b; border: 1px solid #2d2d5e; border-radius: 20px; cursor: pointer; font-size: 11px; color: #7c7c9e; }
+.filter-btn.active { background: #7c3aed; color: #fff; border-color: #7c3aed; }
 </style>
 </head>
 <body>
@@ -62,10 +73,6 @@ button:hover { background: #6d28d9; }
   </div>
 </div>
 
-<div class="live-bar" id="liveBar">
-  <span style="color:#7c7c9e;">Loading live matches...</span>
-</div>
-
 <div class="stats-bar">
   <div class="stat"><div class="stat-val" id="totalMinted">0</div><div>Minted</div></div>
   <div class="stat"><div class="stat-val" id="totalOwned">0</div><div>My Jerseys</div></div>
@@ -78,6 +85,7 @@ button:hover { background: #6d28d9; }
   <div class="tab active" data-tab="marketplace" onclick="showTab(this)">🏪 Marketplace</div>
   <div class="tab" data-tab="collection" onclick="showTab(this)">👕 My Collection</div>
   <div class="tab" data-tab="swap" onclick="showTab(this)">🔄 Swap Market</div>
+  <div class="tab" data-tab="matches" onclick="showTab(this)">⚽ Live Matches</div>
 </div>
 
 <div id="marketplace" class="section active">
@@ -88,6 +96,14 @@ button:hover { background: #6d28d9; }
 </div>
 <div id="swap" class="section">
   <div class="grid" id="swapGrid"></div>
+</div>
+<div id="matches" class="section">
+  <div class="filter-bar">
+    <div class="filter-btn active" onclick="filterMatches(this,'all')">All</div>
+    <div class="filter-btn" onclick="filterMatches(this,'notstarted')">Upcoming</div>
+    <div class="filter-btn" onclick="filterMatches(this,'finished')">Finished</div>
+  </div>
+  <div id="matchList"></div>
 </div>
 
 <div id="log"><div style="color:#a78bfa;">📋 Activity Log</div></div>
@@ -100,6 +116,8 @@ var swapCount = 0;
 var liveTeams = {};
 var hotTeams = {};
 var eliminatedTeams = {};
+var allGames = [];
+var currentFilter = "all";
 var WC_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhNGE1MmM5YjMwMTVlNWJmM2ViZTU3NCIsImlhdCI6MTc4MzI1NTc4MywiZXhwIjoxNzkwNTEzMzgzfQ.4Fvylt8oovD-9b1FWLWwjpPKubBHzsvsZKBD2coP_dA";
 
 var teams = [
@@ -153,51 +171,40 @@ var teams = [
   { name: "Uzbekistan", odds: 110.0, body: "#1EB53A", sleeve: "#1EB53A", band: "#FFFFFF" }
 ];
 
-// Load live World Cup data
 function loadLiveData() {
   fetch("https://worldcup26.ir/get/games", {
     headers: { "Authorization": "Bearer " + WC_TOKEN }
   })
   .then(function(res) { return res.json(); })
   .then(function(data) {
-    var games = data.games || [];
-    var liveMatches = [];
-    var liveCount = 0;
+    allGames = data.games || [];
+    liveTeams = {};
+    hotTeams = {};
+    eliminatedTeams = {};
 
-    games.forEach(function(g) {
+    var liveCount = 0;
+    var teamWins = {};
+    var teamGames = {};
+
+    allGames.forEach(function(g) {
       var home = g.home_team_name_en;
       var away = g.away_team_name_en;
       var status = g.time_elapsed;
-      var homeScore = parseInt(g.home_score) || 0;
-      var awayScore = parseInt(g.away_score) || 0;
+      var hs = parseInt(g.home_score) || 0;
+      var as = parseInt(g.away_score) || 0;
 
-      // Track live matches
-      if (status === "notstarted" && isToday(g.local_date)) {
-        liveMatches.push(home + " vs " + away + " (upcoming)");
+      if (status === "notstarted") {
         liveTeams[home] = true;
         liveTeams[away] = true;
         liveCount++;
       }
 
       if (status === "finished") {
-        // Winner team gets HOT badge
-        if (homeScore > awayScore) {
-          hotTeams[home] = (hotTeams[home] || 0) + 1;
-        } else if (awayScore > homeScore) {
-          hotTeams[away] = (hotTeams[away] || 0) + 1;
-        }
+        if (hs > as) hotTeams[home] = (hotTeams[home] || 0) + 1;
+        else if (as > hs) hotTeams[away] = (hotTeams[away] || 0) + 1;
       }
-    });
 
-    // Find eliminated teams (lost all group games)
-    var teamWins = {};
-    var teamGames = {};
-    games.forEach(function(g) {
-      if (g.type === "group" && g.time_elapsed === "finished") {
-        var home = g.home_team_name_en;
-        var away = g.away_team_name_en;
-        var hs = parseInt(g.home_score) || 0;
-        var as = parseInt(g.away_score) || 0;
+      if (g.type === "group" && status === "finished") {
         teamGames[home] = (teamGames[home] || 0) + 1;
         teamGames[away] = (teamGames[away] || 0) + 1;
         if (hs > as) teamWins[home] = (teamWins[home] || 0) + 1;
@@ -205,49 +212,75 @@ function loadLiveData() {
       }
     });
 
-    // Update odds based on performance
     teams.forEach(function(t) {
       var wins = teamWins[t.name] || 0;
       var games = teamGames[t.name] || 0;
       if (games >= 3) {
-        // Adjust odds based on wins
-        if (wins === 3) t.odds = Math.max(t.odds * 0.5, 3); // Great performance
+        if (wins === 3) t.odds = Math.max(t.odds * 0.5, 3);
         if (wins === 0) { t.odds = t.odds * 1.5; eliminatedTeams[t.name] = true; }
       }
     });
 
-    // Update live bar
     document.getElementById("liveCount").textContent = liveCount;
-    var barHTML = "";
-    if (liveMatches.length > 0) {
-      liveMatches.forEach(function(m) {
-        barHTML += '<span class="live-match"><span class="live-dot"></span>' + m + '</span>';
-      });
-    } else {
-      // Show recent results
-      var recent = games.filter(function(g) { return g.time_elapsed === "finished"; }).slice(-3);
-      recent.forEach(function(g) {
-        barHTML += '<span class="live-match">⚽ ' + g.home_team_name_en + ' ' + g.home_score + '-' + g.away_score + ' ' + g.away_team_name_en + '</span>';
-      });
-    }
-    document.getElementById("liveBar").innerHTML = barHTML || '<span style="color:#7c7c9e;">No live matches right now</span>';
-
     renderMarketplace();
-    addLog("✓ Live World Cup data loaded — " + games.length + " matches");
+    renderMatchList();
+    addLog("✓ Live data loaded — " + allGames.length + " matches");
   })
   .catch(function(e) {
-    document.getElementById("liveBar").innerHTML = '<span style="color:#ef4444;">Live data unavailable</span>';
+    addLog("Live data error: " + e.message);
   });
 }
 
-function isToday(dateStr) {
-  var today = new Date().toISOString().split("T")[0];
-  var parts = dateStr.split(" ")[0].split("/");
-  if (parts.length === 3) {
-    var d = parts[2] + "-" + parts[0] + "-" + parts[1];
-    return d === today;
+function renderMatchList() {
+  var filtered = allGames;
+  if (currentFilter !== "all") {
+    filtered = allGames.filter(function(g) { return g.time_elapsed === currentFilter; });
   }
-  return false;
+
+  var html = "";
+  filtered.forEach(function(g) {
+    var status = g.time_elapsed;
+    var cardClass = status === "notstarted" ? "upcoming" : status === "finished" ? "finished" : "live";
+    var statusHTML = "";
+    if (status === "notstarted") {
+      statusHTML = '<span class="match-status-upcoming">⏰ Upcoming</span>';
+    } else if (status === "finished") {
+      statusHTML = '<span class="match-status-finished">✓ Finished</span>';
+    } else {
+      statusHTML = '<span class="match-status-live"><span class="live-dot"></span>LIVE</span>';
+    }
+
+    var scoreHTML = status === "notstarted"
+      ? '<div class="match-score" style="font-size:14px; color:#7c7c9e;">VS</div>'
+      : '<div class="match-score">' + g.home_score + ' - ' + g.away_score + '</div>';
+
+    html += '<div class="match-card ' + cardClass + '">';
+    html += '<div>';
+    html += '<div class="match-teams">' + (g.home_team_name_en || "TBD") + '</div>';
+    html += '<div style="font-size:11px; color:#7c7c9e; margin-top:4px;">' + (g.home_team_name_en || "TBD") + '</div>';
+    html += '</div>';
+    html += scoreHTML;
+    html += '<div>';
+    html += '<div class="match-teams" style="text-align:right;">' + (g.away_team_name_en || "TBD") + '</div>';
+    html += '<div class="match-info" style="margin-top:4px;">' + statusHTML + '</div>';
+    html += '<div class="match-info">' + (g.local_date || "") + '</div>';
+    html += '<div class="match-info" style="color:#a78bfa;">' + (g.group || "") + '</div>';
+    html += '</div>';
+    html += '</div>';
+  });
+
+  if (filtered.length === 0) {
+    html = '<div style="color:#7c7c9e; padding:20px; text-align:center;">No matches found</div>';
+  }
+
+  document.getElementById("matchList").innerHTML = html;
+}
+
+function filterMatches(el, filter) {
+  currentFilter = filter;
+  document.querySelectorAll(".filter-btn").forEach(function(b) { b.classList.remove("active"); });
+  el.classList.add("active");
+  renderMatchList();
 }
 
 function drawJersey(t) {
@@ -275,7 +308,7 @@ function getTrend(name) {
   if (wins >= 3) return '<span style="color:#10b981;">▲ HOT +' + wins + ' wins</span>';
   if (wins >= 1) return '<span style="color:#60a5fa;">▲ ' + wins + ' win(s)</span>';
   if (eliminatedTeams[name]) return '<span style="color:#ef4444;">▼ Eliminated</span>';
-  if (liveTeams[name]) return '<span style="color:#f59e0b;">⚡ Playing today</span>';
+  if (liveTeams[name]) return '<span style="color:#f59e0b;">⚡ Playing soon</span>';
   return '<span style="color:#7c7c9e;">— Stable</span>';
 }
 
@@ -295,7 +328,7 @@ function cardHTML(t, i, mode) {
 
   var html = "<div class='" + classes + "'>";
   if (isHot) html += "<div class='hot-badge'>🔥 HOT</div>";
-  if (isLive) html += "<div class='match-badge'>⚡ TODAY</div>";
+  if (isLive && !isHot) html += "<div class='match-badge'>⚡ SOON</div>";
   if (isElim && !isHot) html += "<div class='elim-badge'>OUT</div>";
 
   html += "<div class='jersey-img'>" + drawJersey(t) + "</div>";
@@ -327,11 +360,7 @@ function cardHTML(t, i, mode) {
 
 function renderMarketplace() {
   var sorted = teams.map(function(t, i) { return { t: t, i: i }; });
-  sorted.sort(function(a, b) {
-    var aHot = hotTeams[a.t.name] || 0;
-    var bHot = hotTeams[b.t.name] || 0;
-    return bHot - aHot;
-  });
+  sorted.sort(function(a, b) { return (hotTeams[b.t.name] || 0) - (hotTeams[a.t.name] || 0); });
   var html = "";
   sorted.forEach(function(obj) { html += cardHTML(obj.t, obj.i, "market"); });
   document.getElementById("jerseyGrid").innerHTML = html;
@@ -418,8 +447,7 @@ function updateStats() {
   document.getElementById("totalMinted").textContent = count;
   document.getElementById("totalOwned").textContent = count;
   document.getElementById("totalSwaps").textContent = swapCount;
-  var hotName = "-";
-  var maxWins = 0;
+  var hotName = "-"; var maxWins = 0;
   Object.keys(hotTeams).forEach(function(name) {
     if (hotTeams[name] > maxWins) { maxWins = hotTeams[name]; hotName = name; }
   });
@@ -434,6 +462,7 @@ function showTab(el) {
   el.classList.add("active");
   if (tab === "collection") renderCollection();
   if (tab === "swap") renderSwapMarket();
+  if (tab === "matches") renderMatchList();
 }
 
 function addLog(msg) {
@@ -454,7 +483,6 @@ document.getElementById("connectBtn").addEventListener("click", function() {
   }).catch(function(e) { addLog("Error: " + e.message); });
 });
 
-// Load live data on startup + refresh every 5 minutes
 loadLiveData();
 setInterval(loadLiveData, 300000);
 </script>
