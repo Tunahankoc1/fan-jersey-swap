@@ -15,21 +15,21 @@ button:hover { background: #e6b84d; }
 .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
 .tab { padding: 10px 20px; background: #15301f; border: 1px solid #2a4a36; cursor: pointer; border-radius: 6px; color: #b9c4ba; }
 .tab.active { background: #d4a843; color: #0a0a1a; font-weight: bold; }
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
-.jersey-card { background: #15301f; border: 1px solid #2a4a36; border-radius: 10px; padding: 15px; text-align: center; cursor: pointer; transition: all 0.2s; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
+.jersey-card { background: #15301f; border: 1px solid #2a4a36; border-radius: 10px; padding: 15px; text-align: center; transition: all 0.2s; }
 .jersey-card:hover { border-color: #d4a843; transform: translateY(-2px); }
 .jersey-card.owned { border-color: #4a7a4a; }
-.jersey-emoji { font-size: 48px; margin-bottom: 10px; }
-.jersey-team { font-size: 13px; font-weight: bold; margin-bottom: 5px; }
-.jersey-odds { font-size: 11px; color: #b9c4ba; margin-bottom: 5px; }
-.jersey-value { font-size: 14px; color: #d4a843; font-weight: bold; margin-bottom: 10px; }
-.jersey-rarity { font-size: 10px; padding: 3px 8px; border-radius: 10px; display: inline-block; margin-bottom: 10px; }
+.jersey-emoji { font-size: 44px; margin-bottom: 8px; }
+.jersey-team { font-size: 13px; font-weight: bold; margin-bottom: 4px; }
+.jersey-odds { font-size: 11px; color: #b9c4ba; margin-bottom: 4px; }
+.jersey-value { font-size: 13px; color: #d4a843; font-weight: bold; margin-bottom: 8px; }
+.jersey-rarity { font-size: 10px; padding: 3px 8px; border-radius: 10px; display: inline-block; margin-bottom: 8px; }
 .rarity-common { background: #2a4a36; color: #6abf6a; }
 .rarity-rare { background: #2a2a4a; color: #6a6abf; }
 .rarity-epic { background: #4a2a4a; color: #bf6abf; }
 .rarity-legendary { background: #4a3a0a; color: #d4a843; }
-.mint-btn { width: 100%; padding: 8px; background: #d4a843; color: #0a0a1a; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; font-size: 12px; }
-.swap-btn { width: 100%; padding: 8px; background: #2a4a7a; color: #f1ede2; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; font-size: 12px; margin-top: 5px; }
+.mint-btn { width: 100%; padding: 7px; background: #d4a843; color: #0a0a1a; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; font-size: 11px; }
+.swap-btn { width: 100%; padding: 7px; background: #2a4a7a; color: #f1ede2; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; font-size: 11px; margin-top: 5px; }
 #log { background: #15301f; border: 1px solid #2a4a36; padding: 15px; border-radius: 8px; margin-top: 20px; font-size: 11px; color: #b9c4ba; max-height: 150px; overflow-y: auto; }
 .section { display: none; }
 .section.active { display: block; }
@@ -44,7 +44,7 @@ button:hover { background: #e6b84d; }
 <p class="subtitle">World Cup 2026 | NFT Jersey Marketplace | Powered by Solana & TxODDS</p>
 
 <div class="topbar">
-  <div style="font-size:12px; color:#b9c4ba;">Program: DQvUS9W1q6scsf2w5mLXcZfsvkf645pKYYQN8p6rhsMq</div>
+  <div style="font-size:11px; color:#b9c4ba;">Program: DQvUS9W1q6scsf2w5mLXcZfsvkf645pKYYQN8p6rhsMq</div>
   <div style="display:flex; gap:10px; align-items:center;">
     <div id="walletAddr" style="font-size:12px; color:#d4a843;"></div>
     <button id="connectBtn">Connect Phantom</button>
@@ -59,9 +59,9 @@ button:hover { background: #e6b84d; }
 </div>
 
 <div class="tabs">
-  <div class="tab active" onclick="showTab('marketplace')">🏪 Marketplace</div>
-  <div class="tab" onclick="showTab('collection')">👕 My Collection</div>
-  <div class="tab" onclick="showTab('swap')">🔄 Swap Market</div>
+  <div class="tab active" data-tab="marketplace" onclick="showTab(this)">🏪 Marketplace</div>
+  <div class="tab" data-tab="collection" onclick="showTab(this)">👕 My Collection</div>
+  <div class="tab" data-tab="swap" onclick="showTab(this)">🔄 Swap Market</div>
 </div>
 
 <div id="marketplace" class="section active">
@@ -83,25 +83,56 @@ var wallet = null;
 var minted = {};
 var swapListed = {};
 var swapCount = 0;
-var WC_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhNGE1MmM5YjMwMTVlNWJmM2ViZTU3NCIsImlhdCI6MTc4MzI1NTc4MywiZXhwIjoxNzkwNTEzMzgzfQ.4Fvylt8oovD-9b1FWLWwjpPKubBHzsvsZKBD2coP_dA";
 
 var teams = [
-  { name: "Brazil", emoji: "🇧🇷", odds: 4.5 },
-  { name: "France", emoji: "🇫🇷", odds: 5.0 },
-  { name: "Argentina", emoji: "🇦🇷", odds: 5.5 },
-  { name: "England", emoji: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", odds: 6.0 },
-  { name: "Spain", emoji: "🇪🇸", odds: 6.5 },
-  { name: "Germany", emoji: "🇩🇪", odds: 7.0 },
-  { name: "Portugal", emoji: "🇵🇹", odds: 8.0 },
-  { name: "Netherlands", emoji: "🇳🇱", odds: 9.0 },
-  { name: "Belgium", emoji: "🇧🇪", odds: 10.0 },
-  { name: "Turkey", emoji: "🇹🇷", odds: 25.0 },
-  { name: "Morocco", emoji: "🇲🇦", odds: 30.0 },
-  { name: "Japan", emoji: "🇯🇵", odds: 35.0 },
-  { name: "USA", emoji: "🇺🇸", odds: 15.0 },
   { name: "Mexico", emoji: "🇲🇽", odds: 20.0 },
+  { name: "South Africa", emoji: "🇿🇦", odds: 80.0 },
+  { name: "South Korea", emoji: "🇰🇷", odds: 35.0 },
+  { name: "Czech Republic", emoji: "🇨🇿", odds: 60.0 },
+  { name: "Canada", emoji: "🇨🇦", odds: 25.0 },
+  { name: "Bosnia", emoji: "🇧🇦", odds: 90.0 },
+  { name: "Qatar", emoji: "🇶🇦", odds: 100.0 },
+  { name: "Switzerland", emoji: "🇨🇭", odds: 22.0 },
+  { name: "Brazil", emoji: "🇧🇷", odds: 4.5 },
+  { name: "Morocco", emoji: "🇲🇦", odds: 30.0 },
+  { name: "Haiti", emoji: "🇭🇹", odds: 150.0 },
+  { name: "Scotland", emoji: "🏴󠁧󠁢󠁳󠁣󠁴󠁿", odds: 70.0 },
+  { name: "USA", emoji: "🇺🇸", odds: 15.0 },
+  { name: "Paraguay", emoji: "🇵🇾", odds: 85.0 },
+  { name: "Australia", emoji: "🇦🇺", odds: 55.0 },
+  { name: "Turkey", emoji: "🇹🇷", odds: 25.0 },
+  { name: "Germany", emoji: "🇩🇪", odds: 7.0 },
+  { name: "Curacao", emoji: "🇨🇼", odds: 200.0 },
+  { name: "Ivory Coast", emoji: "🇨🇮", odds: 45.0 },
+  { name: "Ecuador", emoji: "🇪🇨", odds: 50.0 },
+  { name: "Netherlands", emoji: "🇳🇱", odds: 9.0 },
+  { name: "Japan", emoji: "🇯🇵", odds: 35.0 },
+  { name: "Sweden", emoji: "🇸🇪", odds: 40.0 },
+  { name: "Tunisia", emoji: "🇹🇳", odds: 95.0 },
+  { name: "Belgium", emoji: "🇧🇪", odds: 10.0 },
+  { name: "Egypt", emoji: "🇪🇬", odds: 65.0 },
+  { name: "Iran", emoji: "🇮🇷", odds: 75.0 },
+  { name: "New Zealand", emoji: "🇳🇿", odds: 120.0 },
+  { name: "Spain", emoji: "🇪🇸", odds: 6.5 },
+  { name: "Cape Verde", emoji: "🇨🇻", odds: 130.0 },
+  { name: "Saudi Arabia", emoji: "🇸🇦", odds: 80.0 },
+  { name: "Uruguay", emoji: "🇺🇾", odds: 30.0 },
+  { name: "France", emoji: "🇫🇷", odds: 5.0 },
+  { name: "Senegal", emoji: "🇸🇳", odds: 50.0 },
+  { name: "Iraq", emoji: "🇮🇶", odds: 110.0 },
+  { name: "Norway", emoji: "🇳🇴", odds: 28.0 },
+  { name: "Argentina", emoji: "🇦🇷", odds: 5.5 },
+  { name: "Algeria", emoji: "🇩🇿", odds: 70.0 },
+  { name: "Austria", emoji: "🇦🇹", odds: 45.0 },
+  { name: "Jordan", emoji: "🇯🇴", odds: 120.0 },
+  { name: "Portugal", emoji: "🇵🇹", odds: 8.0 },
+  { name: "DR Congo", emoji: "🇨🇩", odds: 100.0 },
+  { name: "Uzbekistan", emoji: "🇺🇿", odds: 110.0 },
   { name: "Colombia", emoji: "🇨🇴", odds: 22.0 },
-  { name: "Norway", emoji: "🇳🇴", odds: 28.0 }
+  { name: "England", emoji: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", odds: 6.0 },
+  { name: "Croatia", emoji: "🇭🇷", odds: 40.0 },
+  { name: "Ghana", emoji: "🇬🇭", odds: 90.0 },
+  { name: "Panama", emoji: "🇵🇦", odds: 140.0 }
 ];
 
 function getRarity(odds) {
@@ -130,11 +161,14 @@ function renderMarketplace() {
     if (isOwned) {
       html += "<div style='color:#6abf6a; font-size:11px; margin-bottom:5px;'>✓ Owned</div>";
     } else {
-      html += "<button class='mint-btn' onclick='mintJersey(" + i + ")'>Mint Jersey</button>";
+      html += "<button class='mint-btn' data-i='" + i + "'>Mint Jersey</button>";
     }
     html += "</div>";
   });
   document.getElementById("jerseyGrid").innerHTML = html;
+  document.querySelectorAll(".mint-btn").forEach(function(btn) {
+    btn.addEventListener("click", function() { mintJersey(parseInt(btn.getAttribute("data-i"))); });
+  });
   updateStats();
 }
 
@@ -156,7 +190,7 @@ function renderCollection() {
       if (isListed) {
         html += "<div style='color:#d4a843; font-size:11px;'>Listed for Swap</div>";
       } else {
-        html += "<button class='swap-btn' onclick='listForSwap(" + i + ")'>List for Swap</button>";
+        html += "<button class='swap-btn' data-i='" + i + "'>List for Swap</button>";
       }
       html += "</div>";
     }
@@ -165,6 +199,9 @@ function renderCollection() {
     html = "<div style='color:#b9c4ba; padding:20px;'>No jerseys yet. Mint some from the Marketplace!</div>";
   }
   document.getElementById("myGrid").innerHTML = html;
+  document.querySelectorAll(".swap-btn").forEach(function(btn) {
+    btn.addEventListener("click", function() { listForSwap(parseInt(btn.getAttribute("data-i"))); });
+  });
 }
 
 function renderSwapMarket() {
@@ -182,7 +219,7 @@ function renderSwapMarket() {
       html += "<div class='jersey-value'>" + price + " SOL</div>";
       html += "<div class='jersey-rarity " + rarity.cls + "'>" + rarity.label + "</div>";
       html += "<div style='color:#b9c4ba; font-size:11px; margin-bottom:5px;'>Listed by fan</div>";
-      html += "<button class='mint-btn' onclick='swapJersey(" + i + ")'>Swap Now</button>";
+      html += "<button class='mint-btn' data-i='" + i + "'>Swap Now</button>";
       html += "</div>";
     }
   });
@@ -190,18 +227,18 @@ function renderSwapMarket() {
     html = "<div style='color:#b9c4ba; padding:20px;'>No jerseys listed for swap yet.</div>";
   }
   document.getElementById("swapGrid").innerHTML = html;
+  document.querySelectorAll("#swapGrid .mint-btn").forEach(function(btn) {
+    btn.addEventListener("click", function() { swapJersey(parseInt(btn.getAttribute("data-i"))); });
+  });
 }
 
 async function mintJersey(i) {
   if (!wallet) { addLog("Connect wallet first!"); return; }
-  
   try {
     addLog("Minting " + teams[i].name + " jersey...");
-    
     var connection = new solanaWeb3.Connection("https://api.devnet.solana.com", "confirmed");
     var pubkey = wallet.publicKey;
     var memo = "FanJerseySwap:mint:" + teams[i].name + ":odds=" + teams[i].odds;
-    
     var tx = new solanaWeb3.Transaction().add(
       new solanaWeb3.TransactionInstruction({
         keys: [{ pubkey: pubkey, isSigner: true, isWritable: false }],
@@ -209,37 +246,27 @@ async function mintJersey(i) {
         data: Buffer.from(memo)
       })
     );
-    
     tx.feePayer = pubkey;
     var blockhash = await connection.getLatestBlockhash();
     tx.recentBlockhash = blockhash.blockhash;
-    
     var signed = await wallet.signTransaction(tx);
     var txid = await connection.sendRawTransaction(signed.serialize());
-    
     minted[i] = txid;
     addLog("✓ Minted " + teams[i].name + " jersey!");
     addLog('<a style="color:#d4a843;" href="https://explorer.solana.com/tx/' + txid + '?cluster=devnet" target="_blank">' + txid.slice(0,20) + "...</a>");
-    
     renderMarketplace();
     renderCollection();
     updateStats();
-    
-  } catch(e) {
-    addLog("Error: " + e.message);
-  }
+  } catch(e) { addLog("Error: " + e.message); }
 }
 
 async function listForSwap(i) {
   if (!wallet) { addLog("Connect wallet first!"); return; }
-  
   try {
-    addLog("Listing " + teams[i].name + " jersey for swap...");
-    
+    addLog("Listing " + teams[i].name + " for swap...");
     var connection = new solanaWeb3.Connection("https://api.devnet.solana.com", "confirmed");
     var pubkey = wallet.publicKey;
     var memo = "FanJerseySwap:list:" + teams[i].name;
-    
     var tx = new solanaWeb3.Transaction().add(
       new solanaWeb3.TransactionInstruction({
         keys: [{ pubkey: pubkey, isSigner: true, isWritable: false }],
@@ -247,35 +274,25 @@ async function listForSwap(i) {
         data: Buffer.from(memo)
       })
     );
-    
     tx.feePayer = pubkey;
     var blockhash = await connection.getLatestBlockhash();
     tx.recentBlockhash = blockhash.blockhash;
-    
     var signed = await wallet.signTransaction(tx);
     var txid = await connection.sendRawTransaction(signed.serialize());
-    
     swapListed[i] = true;
-    addLog("✓ Listed " + teams[i].name + " jersey for swap!");
-    
+    addLog("✓ Listed " + teams[i].name + " for swap!");
     renderCollection();
     renderSwapMarket();
-    
-  } catch(e) {
-    addLog("Error: " + e.message);
-  }
+  } catch(e) { addLog("Error: " + e.message); }
 }
 
 async function swapJersey(i) {
   if (!wallet) { addLog("Connect wallet first!"); return; }
-  
   try {
     addLog("Swapping " + teams[i].name + " jersey...");
-    
     var connection = new solanaWeb3.Connection("https://api.devnet.solana.com", "confirmed");
     var pubkey = wallet.publicKey;
     var memo = "FanJerseySwap:swap:" + teams[i].name;
-    
     var tx = new solanaWeb3.Transaction().add(
       new solanaWeb3.TransactionInstruction({
         keys: [{ pubkey: pubkey, isSigner: true, isWritable: false }],
@@ -283,28 +300,20 @@ async function swapJersey(i) {
         data: Buffer.from(memo)
       })
     );
-    
     tx.feePayer = pubkey;
     var blockhash = await connection.getLatestBlockhash();
     tx.recentBlockhash = blockhash.blockhash;
-    
     var signed = await wallet.signTransaction(tx);
     var txid = await connection.sendRawTransaction(signed.serialize());
-    
     swapListed[i] = false;
     minted[i] = txid;
     swapCount++;
-    
     addLog("✓ Swapped " + teams[i].name + " jersey!");
     addLog('<a style="color:#d4a843;" href="https://explorer.solana.com/tx/' + txid + '?cluster=devnet" target="_blank">' + txid.slice(0,20) + "...</a>");
-    
     renderCollection();
     renderSwapMarket();
     updateStats();
-    
-  } catch(e) {
-    addLog("Error: " + e.message);
-  }
+  } catch(e) { addLog("Error: " + e.message); }
 }
 
 function updateStats() {
@@ -312,7 +321,6 @@ function updateStats() {
   document.getElementById("totalMinted").textContent = count;
   document.getElementById("totalOwned").textContent = count;
   document.getElementById("totalSwaps").textContent = swapCount;
-  
   var hotOdds = 999;
   var hotTeam = "-";
   teams.forEach(function(t, i) {
@@ -324,12 +332,12 @@ function updateStats() {
   document.getElementById("hotTeam").textContent = hotTeam;
 }
 
-function showTab(tab) {
+function showTab(el) {
   document.querySelectorAll(".section").forEach(function(s) { s.classList.remove("active"); });
   document.querySelectorAll(".tab").forEach(function(t) { t.classList.remove("active"); });
+  var tab = el.getAttribute("data-tab");
   document.getElementById(tab).classList.add("active");
-  event.target.classList.add("active");
-  
+  el.classList.add("active");
   if (tab === "collection") renderCollection();
   if (tab === "swap") renderSwapMarket();
 }
@@ -349,9 +357,7 @@ document.getElementById("connectBtn").addEventListener("click", function() {
     document.getElementById("walletAddr").textContent = r.publicKey.toString().slice(0,8) + "...";
     document.getElementById("connectBtn").textContent = "Connected";
     addLog("✓ Wallet connected: " + r.publicKey.toString().slice(0,8) + "...");
-  }).catch(function(e) {
-    addLog("Error: " + e.message);
-  });
+  }).catch(function(e) { addLog("Error: " + e.message); });
 });
 
 renderMarketplace();
