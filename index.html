@@ -6,36 +6,38 @@
 <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: #0a0a1a; color: #f1ede2; font-family: Arial, sans-serif; padding: 20px; }
-h1 { font-size: 28px; color: #d4a843; text-align: center; margin-bottom: 5px; }
-.subtitle { text-align: center; color: #b9c4ba; font-size: 12px; margin-bottom: 20px; }
-.topbar { display: flex; justify-content: space-between; align-items: center; background: #15301f; border: 1px solid #2a4a36; padding: 10px 20px; border-radius: 8px; margin-bottom: 20px; }
-button { padding: 10px 20px; background: #d4a843; color: #0a0a1a; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; }
-button:hover { background: #e6b84d; }
+body { background: #0d0d1a; color: #e8e8f0; font-family: Arial, sans-serif; padding: 20px; }
+h1 { font-size: 28px; color: #a78bfa; text-align: center; margin-bottom: 5px; }
+.subtitle { text-align: center; color: #7c7c9e; font-size: 12px; margin-bottom: 20px; }
+.topbar { display: flex; justify-content: space-between; align-items: center; background: #13132b; border: 1px solid #2d2d5e; padding: 10px 20px; border-radius: 8px; margin-bottom: 20px; }
+button { padding: 10px 20px; background: #7c3aed; color: #ffffff; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; }
+button:hover { background: #6d28d9; }
 .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-.tab { padding: 10px 20px; background: #15301f; border: 1px solid #2a4a36; cursor: pointer; border-radius: 6px; color: #b9c4ba; }
-.tab.active { background: #d4a843; color: #0a0a1a; font-weight: bold; }
+.tab { padding: 10px 20px; background: #13132b; border: 1px solid #2d2d5e; cursor: pointer; border-radius: 6px; color: #7c7c9e; }
+.tab.active { background: #7c3aed; color: #ffffff; font-weight: bold; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
-.jersey-card { background: #15301f; border: 1px solid #2a4a36; border-radius: 10px; padding: 15px; text-align: center; transition: all 0.2s; }
-.jersey-card:hover { border-color: #d4a843; transform: translateY(-2px); }
-.jersey-card.owned { border-color: #4a7a4a; }
+.jersey-card { background: #13132b; border: 1px solid #2d2d5e; border-radius: 10px; padding: 15px; text-align: center; transition: all 0.2s; }
+.jersey-card:hover { border-color: #a78bfa; transform: translateY(-2px); }
+.jersey-card.owned { border-color: #4f46e5; box-shadow: 0 0 8px #4f46e540; }
 .jersey-img { height: 100px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
-.jersey-team { font-size: 13px; font-weight: bold; margin-bottom: 4px; }
-.jersey-odds { font-size: 11px; color: #b9c4ba; margin-bottom: 4px; }
-.jersey-value { font-size: 13px; color: #d4a843; font-weight: bold; margin-bottom: 8px; }
+.jersey-team { font-size: 13px; font-weight: bold; margin-bottom: 4px; color: #e8e8f0; }
+.jersey-odds { font-size: 11px; color: #7c7c9e; margin-bottom: 4px; }
+.jersey-value { font-size: 13px; color: #a78bfa; font-weight: bold; margin-bottom: 8px; }
 .jersey-rarity { font-size: 10px; padding: 3px 8px; border-radius: 10px; display: inline-block; margin-bottom: 8px; }
-.rarity-common { background: #2a4a36; color: #6abf6a; }
-.rarity-rare { background: #2a2a4a; color: #6a6abf; }
-.rarity-epic { background: #4a2a4a; color: #bf6abf; }
-.rarity-legendary { background: #4a3a0a; color: #d4a843; }
-.mint-btn { width: 100%; padding: 7px; background: #d4a843; color: #0a0a1a; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; font-size: 11px; }
-.swap-btn { width: 100%; padding: 7px; background: #2a4a7a; color: #f1ede2; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; font-size: 11px; margin-top: 5px; }
-#log { background: #15301f; border: 1px solid #2a4a36; padding: 15px; border-radius: 8px; margin-top: 20px; font-size: 11px; color: #b9c4ba; max-height: 150px; overflow-y: auto; }
+.rarity-common { background: #1e293b; color: #94a3b8; }
+.rarity-rare { background: #1e3a5f; color: #60a5fa; }
+.rarity-epic { background: #3b1f5e; color: #c084fc; }
+.rarity-legendary { background: #3b2a0a; color: #fbbf24; }
+.mint-btn { width: 100%; padding: 7px; background: #7c3aed; color: #ffffff; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; font-size: 11px; }
+.mint-btn:hover { background: #6d28d9; }
+.swap-btn { width: 100%; padding: 7px; background: #1e3a5f; color: #60a5fa; border: 1px solid #2563eb; cursor: pointer; font-weight: bold; border-radius: 6px; font-size: 11px; margin-top: 5px; }
+.swap-btn:hover { background: #1e40af; }
+#log { background: #13132b; border: 1px solid #2d2d5e; padding: 15px; border-radius: 8px; margin-top: 20px; font-size: 11px; color: #7c7c9e; max-height: 150px; overflow-y: auto; }
 .section { display: none; }
 .section.active { display: block; }
-.stats-bar { background: #0a0a1a; border: 1px solid #2a4a36; padding: 10px; border-radius: 6px; margin-bottom: 15px; display: flex; gap: 20px; font-size: 12px; flex-wrap: wrap; }
+.stats-bar { background: #13132b; border: 1px solid #2d2d5e; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; gap: 30px; font-size: 12px; flex-wrap: wrap; }
 .stat { text-align: center; }
-.stat-val { color: #d4a843; font-weight: bold; font-size: 16px; }
+.stat-val { color: #a78bfa; font-weight: bold; font-size: 20px; }
 </style>
 </head>
 <body>
@@ -44,9 +46,9 @@ button:hover { background: #e6b84d; }
 <p class="subtitle">World Cup 2026 | NFT Jersey Marketplace | Powered by Solana & TxODDS</p>
 
 <div class="topbar">
-  <div style="font-size:11px; color:#b9c4ba;">Program: DQvUS9W1q6scsf2w5mLXcZfsvkf645pKYYQN8p6rhsMq</div>
+  <div style="font-size:11px; color:#7c7c9e;">Program: DQvUS9W1q6scsf2w5mLXcZfsvkf645pKYYQN8p6rhsMq</div>
   <div style="display:flex; gap:10px; align-items:center;">
-    <div id="walletAddr" style="font-size:12px; color:#d4a843;"></div>
+    <div id="walletAddr" style="font-size:12px; color:#a78bfa;"></div>
     <button id="connectBtn">Connect Phantom</button>
   </div>
 </div>
@@ -74,7 +76,7 @@ button:hover { background: #e6b84d; }
   <div class="grid" id="swapGrid"></div>
 </div>
 
-<div id="log"><div style="color:#d4a843;">📋 Activity Log</div></div>
+<div id="log"><div style="color:#a78bfa;">📋 Activity Log</div></div>
 
 <script>
 var wallet = null;
@@ -136,11 +138,11 @@ var teams = [
 function drawJersey(t) {
   var b = t.body, s = t.sleeve, bd = t.band;
   return '<svg width="75" height="90" viewBox="0 0 75 90">' +
-    '<path d="M28 4 L8 18 L3 38 L16 40 L16 82 L59 82 L59 40 L72 38 L67 18 L47 4 L40 10 L37 7 L34 10 Z" fill="' + b + '" stroke="#22222288" stroke-width="1.2"/>' +
-    '<path d="M28 4 L8 18 L3 38 L16 40 L16 24 L26 16 Z" fill="' + s + '" stroke="#22222288" stroke-width="1"/>' +
-    '<path d="M47 4 L67 18 L72 38 L59 40 L59 24 L49 16 Z" fill="' + s + '" stroke="#22222288" stroke-width="1"/>' +
+    '<path d="M28 4 L8 18 L3 38 L16 40 L16 82 L59 82 L59 40 L72 38 L67 18 L47 4 L40 10 L37 7 L34 10 Z" fill="' + b + '" stroke="#ffffff22" stroke-width="1.2"/>' +
+    '<path d="M28 4 L8 18 L3 38 L16 40 L16 24 L26 16 Z" fill="' + s + '" stroke="#ffffff22" stroke-width="1"/>' +
+    '<path d="M47 4 L67 18 L72 38 L59 40 L59 24 L49 16 Z" fill="' + s + '" stroke="#ffffff22" stroke-width="1"/>' +
     '<rect x="16" y="30" width="43" height="14" fill="' + bd + '" opacity="0.85"/>' +
-    '<path d="M34 4 L34 10 L37 7 L40 10 L40 4 Q37 1 34 4 Z" fill="' + bd + '" stroke="#22222288" stroke-width="0.8"/>' +
+    '<path d="M34 4 L34 10 L37 7 L40 10 L40 4 Q37 1 34 4 Z" fill="' + bd + '" stroke="#ffffff22" stroke-width="0.8"/>' +
     '</svg>';
 }
 
@@ -151,9 +153,7 @@ function getRarity(odds) {
   return { label: "COMMON", cls: "rarity-common" };
 }
 
-function getPrice(odds) {
-  return (1 / odds * 2).toFixed(3);
-}
+function getPrice(odds) { return (1 / odds * 2).toFixed(3); }
 
 function cardHTML(t, i, mode) {
   var rarity = getRarity(t.odds);
@@ -168,18 +168,18 @@ function cardHTML(t, i, mode) {
   html += "<div class='jersey-rarity " + rarity.cls + "'>" + rarity.label + "</div>";
   if (mode === "market") {
     if (isOwned) {
-      html += "<div style='color:#6abf6a; font-size:11px; margin-bottom:5px;'>✓ Owned</div>";
+      html += "<div style='color:#818cf8; font-size:11px; margin-bottom:5px;'>✓ Owned</div>";
     } else {
       html += "<button class='mint-btn' data-i='" + i + "'>Mint Jersey</button>";
     }
   } else if (mode === "collection") {
     if (isListed) {
-      html += "<div style='color:#d4a843; font-size:11px;'>Listed for Swap</div>";
+      html += "<div style='color:#a78bfa; font-size:11px;'>Listed for Swap</div>";
     } else {
       html += "<button class='swap-btn' data-i='" + i + "'>List for Swap</button>";
     }
   } else if (mode === "swap") {
-    html += "<div style='color:#b9c4ba; font-size:11px; margin-bottom:5px;'>Listed by fan</div>";
+    html += "<div style='color:#7c7c9e; font-size:11px; margin-bottom:5px;'>Listed by fan</div>";
     html += "<button class='mint-btn' data-i='" + i + "'>Swap Now</button>";
   }
   html += "</div>";
@@ -197,12 +197,9 @@ function renderMarketplace() {
 }
 
 function renderCollection() {
-  var html = "";
-  var count = 0;
-  teams.forEach(function(t, i) {
-    if (minted[i]) { count++; html += cardHTML(t, i, "collection"); }
-  });
-  if (count === 0) html = "<div style='color:#b9c4ba; padding:20px;'>No jerseys yet. Mint from Marketplace!</div>";
+  var html = ""; var count = 0;
+  teams.forEach(function(t, i) { if (minted[i]) { count++; html += cardHTML(t, i, "collection"); } });
+  if (count === 0) html = "<div style='color:#7c7c9e; padding:20px;'>No jerseys yet. Mint from Marketplace!</div>";
   document.getElementById("myGrid").innerHTML = html;
   document.querySelectorAll("#myGrid .swap-btn").forEach(function(btn) {
     btn.addEventListener("click", function() { listForSwap(parseInt(btn.getAttribute("data-i"))); });
@@ -210,12 +207,9 @@ function renderCollection() {
 }
 
 function renderSwapMarket() {
-  var html = "";
-  var count = 0;
-  teams.forEach(function(t, i) {
-    if (swapListed[i]) { count++; html += cardHTML(t, i, "swap"); }
-  });
-  if (count === 0) html = "<div style='color:#b9c4ba; padding:20px;'>No jerseys listed yet.</div>";
+  var html = ""; var count = 0;
+  teams.forEach(function(t, i) { if (swapListed[i]) { count++; html += cardHTML(t, i, "swap"); } });
+  if (count === 0) html = "<div style='color:#7c7c9e; padding:20px;'>No jerseys listed yet.</div>";
   document.getElementById("swapGrid").innerHTML = html;
   document.querySelectorAll("#swapGrid .mint-btn").forEach(function(btn) {
     btn.addEventListener("click", function() { swapJersey(parseInt(btn.getAttribute("data-i"))); });
@@ -246,7 +240,7 @@ async function mintJersey(i) {
     var txid = await sendTx("FanJerseySwap:mint:" + teams[i].name + ":odds=" + teams[i].odds);
     minted[i] = txid;
     addLog("✓ Minted " + teams[i].name + "!");
-    addLog('<a style="color:#d4a843;" href="https://explorer.solana.com/tx/' + txid + '?cluster=devnet" target="_blank">' + txid.slice(0,20) + "...</a>");
+    addLog('<a style="color:#a78bfa;" href="https://explorer.solana.com/tx/' + txid + '?cluster=devnet" target="_blank">' + txid.slice(0,20) + "...</a>");
     renderMarketplace(); renderCollection(); updateStats();
   } catch(e) { addLog("Error: " + e.message); }
 }
@@ -269,7 +263,7 @@ async function swapJersey(i) {
     var txid = await sendTx("FanJerseySwap:swap:" + teams[i].name);
     swapListed[i] = false; minted[i] = txid; swapCount++;
     addLog("✓ Swapped " + teams[i].name + "!");
-    addLog('<a style="color:#d4a843;" href="https://explorer.solana.com/tx/' + txid + '?cluster=devnet" target="_blank">' + txid.slice(0,20) + "...</a>");
+    addLog('<a style="color:#a78bfa;" href="https://explorer.solana.com/tx/' + txid + '?cluster=devnet" target="_blank">' + txid.slice(0,20) + "...</a>");
     renderCollection(); renderSwapMarket(); updateStats();
   } catch(e) { addLog("Error: " + e.message); }
 }
