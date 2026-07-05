@@ -16,13 +16,19 @@ button:hover { background: #6d28d9; }
 .tab { padding: 10px 20px; background: #13132b; border: 1px solid #2d2d5e; cursor: pointer; border-radius: 6px; color: #7c7c9e; }
 .tab.active { background: #7c3aed; color: #ffffff; font-weight: bold; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
-.jersey-card { background: #13132b; border: 1px solid #2d2d5e; border-radius: 10px; padding: 15px; text-align: center; transition: all 0.2s; }
+.jersey-card { background: #13132b; border: 1px solid #2d2d5e; border-radius: 10px; padding: 15px; text-align: center; transition: all 0.2s; position: relative; }
 .jersey-card:hover { border-color: #a78bfa; transform: translateY(-2px); }
 .jersey-card.owned { border-color: #4f46e5; box-shadow: 0 0 8px #4f46e540; }
+.jersey-card.hot { border-color: #f59e0b; box-shadow: 0 0 10px #f59e0b40; }
+.jersey-card.eliminated { opacity: 0.5; }
+.hot-badge { position: absolute; top: 8px; right: 8px; background: #f59e0b; color: #000; font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 10px; }
+.match-badge { position: absolute; top: 8px; left: 8px; background: #10b981; color: #000; font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 10px; }
+.elim-badge { position: absolute; top: 8px; right: 8px; background: #ef4444; color: #fff; font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 10px; }
 .jersey-img { height: 100px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
 .jersey-team { font-size: 13px; font-weight: bold; margin-bottom: 4px; color: #e8e8f0; }
 .jersey-odds { font-size: 11px; color: #7c7c9e; margin-bottom: 4px; }
-.jersey-value { font-size: 13px; color: #a78bfa; font-weight: bold; margin-bottom: 8px; }
+.jersey-value { font-size: 13px; color: #a78bfa; font-weight: bold; margin-bottom: 4px; }
+.jersey-trend { font-size: 11px; margin-bottom: 6px; }
 .jersey-rarity { font-size: 10px; padding: 3px 8px; border-radius: 10px; display: inline-block; margin-bottom: 8px; }
 .rarity-common { background: #1e293b; color: #94a3b8; }
 .rarity-rare { background: #1e3a5f; color: #60a5fa; }
@@ -31,19 +37,22 @@ button:hover { background: #6d28d9; }
 .mint-btn { width: 100%; padding: 7px; background: #7c3aed; color: #ffffff; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; font-size: 11px; }
 .mint-btn:hover { background: #6d28d9; }
 .swap-btn { width: 100%; padding: 7px; background: #1e3a5f; color: #60a5fa; border: 1px solid #2563eb; cursor: pointer; font-weight: bold; border-radius: 6px; font-size: 11px; margin-top: 5px; }
-.swap-btn:hover { background: #1e40af; }
 #log { background: #13132b; border: 1px solid #2d2d5e; padding: 15px; border-radius: 8px; margin-top: 20px; font-size: 11px; color: #7c7c9e; max-height: 150px; overflow-y: auto; }
 .section { display: none; }
 .section.active { display: block; }
 .stats-bar { background: #13132b; border: 1px solid #2d2d5e; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; gap: 30px; font-size: 12px; flex-wrap: wrap; }
 .stat { text-align: center; }
 .stat-val { color: #a78bfa; font-weight: bold; font-size: 20px; }
+.live-bar { background: #13132b; border: 1px solid #2d2d5e; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; font-size: 11px; }
+.live-match { display: inline-block; margin-right: 20px; color: #e8e8f0; }
+.live-dot { display: inline-block; width: 6px; height: 6px; background: #10b981; border-radius: 50%; margin-right: 4px; animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 </style>
 </head>
 <body>
 
 <h1>⚽ Fan Jersey Swap</h1>
-<p class="subtitle">World Cup 2026 | NFT Jersey Marketplace | Powered by Solana & TxODDS</p>
+<p class="subtitle">World Cup 2026 | NFT Jersey Marketplace | Live Data Powered by WorldCup26 API</p>
 
 <div class="topbar">
   <div style="font-size:11px; color:#7c7c9e;">Program: DQvUS9W1q6scsf2w5mLXcZfsvkf645pKYYQN8p6rhsMq</div>
@@ -53,11 +62,16 @@ button:hover { background: #6d28d9; }
   </div>
 </div>
 
+<div class="live-bar" id="liveBar">
+  <span style="color:#7c7c9e;">Loading live matches...</span>
+</div>
+
 <div class="stats-bar">
   <div class="stat"><div class="stat-val" id="totalMinted">0</div><div>Minted</div></div>
   <div class="stat"><div class="stat-val" id="totalOwned">0</div><div>My Jerseys</div></div>
   <div class="stat"><div class="stat-val" id="totalSwaps">0</div><div>Swaps</div></div>
-  <div class="stat"><div class="stat-val" id="hotTeam">-</div><div>Hottest Team</div></div>
+  <div class="stat"><div class="stat-val" id="hotTeam">-</div><div>🔥 Hottest</div></div>
+  <div class="stat"><div class="stat-val" id="liveCount">0</div><div>Live Matches</div></div>
 </div>
 
 <div class="tabs">
@@ -83,6 +97,10 @@ var wallet = null;
 var minted = {};
 var swapListed = {};
 var swapCount = 0;
+var liveTeams = {};
+var hotTeams = {};
+var eliminatedTeams = {};
+var WC_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhNGE1MmM5YjMwMTVlNWJmM2ViZTU3NCIsImlhdCI6MTc4MzI1NTc4MywiZXhwIjoxNzkwNTEzMzgzfQ.4Fvylt8oovD-9b1FWLWwjpPKubBHzsvsZKBD2coP_dA";
 
 var teams = [
   { name: "Algeria", odds: 70.0, body: "#007749", sleeve: "#007749", band: "#FFFFFF" },
@@ -135,6 +153,103 @@ var teams = [
   { name: "Uzbekistan", odds: 110.0, body: "#1EB53A", sleeve: "#1EB53A", band: "#FFFFFF" }
 ];
 
+// Load live World Cup data
+function loadLiveData() {
+  fetch("https://worldcup26.ir/get/games", {
+    headers: { "Authorization": "Bearer " + WC_TOKEN }
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    var games = data.games || [];
+    var liveMatches = [];
+    var liveCount = 0;
+
+    games.forEach(function(g) {
+      var home = g.home_team_name_en;
+      var away = g.away_team_name_en;
+      var status = g.time_elapsed;
+      var homeScore = parseInt(g.home_score) || 0;
+      var awayScore = parseInt(g.away_score) || 0;
+
+      // Track live matches
+      if (status === "notstarted" && isToday(g.local_date)) {
+        liveMatches.push(home + " vs " + away + " (upcoming)");
+        liveTeams[home] = true;
+        liveTeams[away] = true;
+        liveCount++;
+      }
+
+      if (status === "finished") {
+        // Winner team gets HOT badge
+        if (homeScore > awayScore) {
+          hotTeams[home] = (hotTeams[home] || 0) + 1;
+        } else if (awayScore > homeScore) {
+          hotTeams[away] = (hotTeams[away] || 0) + 1;
+        }
+      }
+    });
+
+    // Find eliminated teams (lost all group games)
+    var teamWins = {};
+    var teamGames = {};
+    games.forEach(function(g) {
+      if (g.type === "group" && g.time_elapsed === "finished") {
+        var home = g.home_team_name_en;
+        var away = g.away_team_name_en;
+        var hs = parseInt(g.home_score) || 0;
+        var as = parseInt(g.away_score) || 0;
+        teamGames[home] = (teamGames[home] || 0) + 1;
+        teamGames[away] = (teamGames[away] || 0) + 1;
+        if (hs > as) teamWins[home] = (teamWins[home] || 0) + 1;
+        if (as > hs) teamWins[away] = (teamWins[away] || 0) + 1;
+      }
+    });
+
+    // Update odds based on performance
+    teams.forEach(function(t) {
+      var wins = teamWins[t.name] || 0;
+      var games = teamGames[t.name] || 0;
+      if (games >= 3) {
+        // Adjust odds based on wins
+        if (wins === 3) t.odds = Math.max(t.odds * 0.5, 3); // Great performance
+        if (wins === 0) { t.odds = t.odds * 1.5; eliminatedTeams[t.name] = true; }
+      }
+    });
+
+    // Update live bar
+    document.getElementById("liveCount").textContent = liveCount;
+    var barHTML = "";
+    if (liveMatches.length > 0) {
+      liveMatches.forEach(function(m) {
+        barHTML += '<span class="live-match"><span class="live-dot"></span>' + m + '</span>';
+      });
+    } else {
+      // Show recent results
+      var recent = games.filter(function(g) { return g.time_elapsed === "finished"; }).slice(-3);
+      recent.forEach(function(g) {
+        barHTML += '<span class="live-match">⚽ ' + g.home_team_name_en + ' ' + g.home_score + '-' + g.away_score + ' ' + g.away_team_name_en + '</span>';
+      });
+    }
+    document.getElementById("liveBar").innerHTML = barHTML || '<span style="color:#7c7c9e;">No live matches right now</span>';
+
+    renderMarketplace();
+    addLog("✓ Live World Cup data loaded — " + games.length + " matches");
+  })
+  .catch(function(e) {
+    document.getElementById("liveBar").innerHTML = '<span style="color:#ef4444;">Live data unavailable</span>';
+  });
+}
+
+function isToday(dateStr) {
+  var today = new Date().toISOString().split("T")[0];
+  var parts = dateStr.split(" ")[0].split("/");
+  if (parts.length === 3) {
+    var d = parts[2] + "-" + parts[0] + "-" + parts[1];
+    return d === today;
+  }
+  return false;
+}
+
 function drawJersey(t) {
   var b = t.body, s = t.sleeve, bd = t.band;
   return '<svg width="75" height="90" viewBox="0 0 75 90">' +
@@ -155,17 +270,41 @@ function getRarity(odds) {
 
 function getPrice(odds) { return (1 / odds * 2).toFixed(3); }
 
+function getTrend(name) {
+  var wins = hotTeams[name] || 0;
+  if (wins >= 3) return '<span style="color:#10b981;">▲ HOT +' + wins + ' wins</span>';
+  if (wins >= 1) return '<span style="color:#60a5fa;">▲ ' + wins + ' win(s)</span>';
+  if (eliminatedTeams[name]) return '<span style="color:#ef4444;">▼ Eliminated</span>';
+  if (liveTeams[name]) return '<span style="color:#f59e0b;">⚡ Playing today</span>';
+  return '<span style="color:#7c7c9e;">— Stable</span>';
+}
+
 function cardHTML(t, i, mode) {
   var rarity = getRarity(t.odds);
   var price = getPrice(t.odds);
   var isOwned = minted[i];
   var isListed = swapListed[i];
-  var html = "<div class='jersey-card" + (isOwned ? " owned" : "") + "'>";
+  var isHot = (hotTeams[t.name] || 0) >= 2;
+  var isLive = liveTeams[t.name];
+  var isElim = eliminatedTeams[t.name];
+
+  var classes = "jersey-card";
+  if (isOwned) classes += " owned";
+  if (isHot) classes += " hot";
+  if (isElim) classes += " eliminated";
+
+  var html = "<div class='" + classes + "'>";
+  if (isHot) html += "<div class='hot-badge'>🔥 HOT</div>";
+  if (isLive) html += "<div class='match-badge'>⚡ TODAY</div>";
+  if (isElim && !isHot) html += "<div class='elim-badge'>OUT</div>";
+
   html += "<div class='jersey-img'>" + drawJersey(t) + "</div>";
   html += "<div class='jersey-team'>" + t.name + "</div>";
-  html += "<div class='jersey-odds'>Odds: " + t.odds + "x</div>";
+  html += "<div class='jersey-odds'>Odds: " + t.odds.toFixed(1) + "x</div>";
   html += "<div class='jersey-value'>" + price + " SOL</div>";
+  html += "<div class='jersey-trend'>" + getTrend(t.name) + "</div>";
   html += "<div class='jersey-rarity " + rarity.cls + "'>" + rarity.label + "</div>";
+
   if (mode === "market") {
     if (isOwned) {
       html += "<div style='color:#818cf8; font-size:11px; margin-bottom:5px;'>✓ Owned</div>";
@@ -187,8 +326,14 @@ function cardHTML(t, i, mode) {
 }
 
 function renderMarketplace() {
+  var sorted = teams.map(function(t, i) { return { t: t, i: i }; });
+  sorted.sort(function(a, b) {
+    var aHot = hotTeams[a.t.name] || 0;
+    var bHot = hotTeams[b.t.name] || 0;
+    return bHot - aHot;
+  });
   var html = "";
-  teams.forEach(function(t, i) { html += cardHTML(t, i, "market"); });
+  sorted.forEach(function(obj) { html += cardHTML(obj.t, obj.i, "market"); });
   document.getElementById("jerseyGrid").innerHTML = html;
   document.querySelectorAll("#jerseyGrid .mint-btn").forEach(function(btn) {
     btn.addEventListener("click", function() { mintJersey(parseInt(btn.getAttribute("data-i"))); });
@@ -273,11 +418,12 @@ function updateStats() {
   document.getElementById("totalMinted").textContent = count;
   document.getElementById("totalOwned").textContent = count;
   document.getElementById("totalSwaps").textContent = swapCount;
-  var hotOdds = 999; var hotTeam = "-";
-  teams.forEach(function(t, i) {
-    if (minted[i] && t.odds < hotOdds) { hotOdds = t.odds; hotTeam = t.name; }
+  var hotName = "-";
+  var maxWins = 0;
+  Object.keys(hotTeams).forEach(function(name) {
+    if (hotTeams[name] > maxWins) { maxWins = hotTeams[name]; hotName = name; }
   });
-  document.getElementById("hotTeam").textContent = hotTeam;
+  document.getElementById("hotTeam").textContent = hotName;
 }
 
 function showTab(el) {
@@ -308,7 +454,9 @@ document.getElementById("connectBtn").addEventListener("click", function() {
   }).catch(function(e) { addLog("Error: " + e.message); });
 });
 
-renderMarketplace();
+// Load live data on startup + refresh every 5 minutes
+loadLiveData();
+setInterval(loadLiveData, 300000);
 </script>
 </body>
 </html>
