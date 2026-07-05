@@ -21,13 +21,16 @@ button:hover { background: #6d28d9; }
 .jersey-card.owned { border-color: #4f46e5; box-shadow: 0 0 8px #4f46e540; }
 .jersey-card.hot { border-color: #f59e0b; box-shadow: 0 0 10px #f59e0b40; }
 .jersey-card.eliminated { opacity: 0.5; }
+.jersey-card.live-odds { border-color: #10b981; }
 .hot-badge { position: absolute; top: 8px; right: 8px; background: #f59e0b; color: #000; font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 10px; }
 .match-badge { position: absolute; top: 8px; left: 8px; background: #10b981; color: #000; font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 10px; }
 .elim-badge { position: absolute; top: 8px; right: 8px; background: #ef4444; color: #fff; font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 10px; }
+.odds-badge { position: absolute; top: 8px; left: 8px; background: #10b981; color: #000; font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 10px; }
 .jersey-img { height: 110px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
 .jersey-img img { max-width: 90px; max-height: 105px; object-fit: contain; }
 .jersey-team { font-size: 13px; font-weight: bold; margin-bottom: 4px; }
 .jersey-odds { font-size: 11px; color: #7c7c9e; margin-bottom: 4px; }
+.jersey-txline-odds { font-size: 11px; color: #10b981; margin-bottom: 4px; font-weight: bold; }
 .jersey-value { font-size: 13px; color: #a78bfa; font-weight: bold; margin-bottom: 4px; }
 .jersey-trend { font-size: 11px; margin-bottom: 6px; }
 .jersey-rarity { font-size: 10px; padding: 3px 8px; border-radius: 10px; display: inline-block; margin-bottom: 8px; }
@@ -52,12 +55,13 @@ button:hover { background: #6d28d9; }
 .filter-bar { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
 .filter-btn { padding: 6px 14px; background: #13132b; border: 1px solid #2d2d5e; border-radius: 20px; cursor: pointer; font-size: 11px; color: #7c7c9e; }
 .filter-btn.active { background: #7c3aed; color: #fff; border-color: #7c3aed; }
+.txline-bar { background: #13132b; border: 1px solid #10b981; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; font-size: 11px; color: #10b981; }
 </style>
 </head>
 <body>
 
 <h1>⚽ Fan Jersey Swap</h1>
-<p class="subtitle">World Cup 2026 | NFT Jersey Marketplace | Powered by Solana & Live Data</p>
+<p class="subtitle">World Cup 2026 | NFT Jersey Marketplace | Powered by Solana & TxLINE Live Odds</p>
 
 <div class="topbar">
   <div style="font-size:11px; color:#7c7c9e;">Program: DQvUS9W1q6scsf2w5mLXcZfsvkf645pKYYQN8p6rhsMq</div>
@@ -65,6 +69,10 @@ button:hover { background: #6d28d9; }
     <div id="walletAddr" style="font-size:12px; color:#a78bfa;"></div>
     <button id="connectBtn">Connect Phantom</button>
   </div>
+</div>
+
+<div class="txline-bar" id="txlineBar">
+  🔴 Loading TxLINE live odds...
 </div>
 
 <div class="stats-bar">
@@ -110,10 +118,25 @@ var swapCount = 0;
 var liveTeams = {};
 var hotTeams = {};
 var eliminatedTeams = {};
+var txlineOdds = {};
 var allGames = [];
 var currentFilter = "all";
 var WC_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhNGE1MmM5YjMwMTVlNWJmM2ViZTU3NCIsImlhdCI6MTc4MzI1NTc4MywiZXhwIjoxNzkwNTEzMzgzfQ.4Fvylt8oovD-9b1FWLWwjpPKubBHzsvsZKBD2coP_dA";
 var RAW = "https://raw.githubusercontent.com/Tunahankoc1/fan-jersey-swap/main/";
+var TXLINE = "https://txline-dev.txodds.com";
+var TXLINE_TOKEN = "txoracle_api_e44c346212fe433c8b42b4bae17ce33d";
+var txlineJwt = null;
+
+// TxLINE fixture IDs
+var FIXTURES = [
+  { id: 18187298, home: "Brazil", away: "Norway" },
+  { id: 18192996, home: "Mexico", away: "England" },
+  { id: 18193785, home: "USA", away: "Belgium" },
+  { id: 18198205, home: "Portugal", away: "Spain" },
+  { id: 18202701, home: "Argentina", away: "Egypt" },
+  { id: 18202783, home: "Switzerland", away: "Colombia" },
+  { id: 18209181, home: "France", away: "Morocco" }
+];
 
 var teams = [
   { name: "Algeria", odds: 70.0, img: RAW + "algeria.webp" },
@@ -166,6 +189,59 @@ var teams = [
   { name: "Uzbekistan", odds: 110.0, img: RAW + "uzbekistan.webp" }
 ];
 
+async function getTxLineJwt() {
+  if (txlineJwt) return txlineJwt;
+  var res = await fetch(TXLINE + "/auth/guest/start", { method: "POST" });
+  var data = await res.json();
+  txlineJwt = data.token;
+  return txlineJwt;
+}
+
+async function loadTxLineOdds() {
+  try {
+    var jwt = await getTxLineJwt();
+    var oddsBar = [];
+
+    for (var i = 0; i < FIXTURES.length; i++) {
+      var f = FIXTURES[i];
+      var res = await fetch(TXLINE + "/api/odds/snapshot/" + f.id, {
+        headers: {
+          "Authorization": "Bearer " + jwt,
+          "X-Api-Token": TXLINE_TOKEN
+        }
+      });
+      var data = await res.json();
+
+      // Find 1X2 odds
+      var market = data.find(function(d) { return d.SuperOddsType === "1X2_PARTICIPANT_RESULT"; });
+      if (market && market.Prices && market.Prices.length >= 3) {
+        var homeOdds = market.Prices[0] / 1000;
+        var awayOdds = market.Prices[2] / 1000;
+
+        txlineOdds[f.home] = homeOdds;
+        txlineOdds[f.away] = awayOdds;
+
+        oddsBar.push(f.home + " " + homeOdds.toFixed(2) + " | " + f.away + " " + awayOdds.toFixed(2));
+      }
+    }
+
+    // Update team odds with TxLINE data
+    teams.forEach(function(t) {
+      if (txlineOdds[t.name]) {
+        t.txlineOdds = txlineOdds[t.name];
+      }
+    });
+
+    document.getElementById("txlineBar").innerHTML = "🟢 TxLINE Live Odds: " + oddsBar.join(" &nbsp;|&nbsp; ");
+    addLog("✓ TxLINE live odds loaded for " + Object.keys(txlineOdds).length + " teams");
+    renderMarketplace();
+
+  } catch(e) {
+    document.getElementById("txlineBar").innerHTML = "🔴 TxLINE offline: " + e.message;
+    addLog("TxLINE error: " + e.message);
+  }
+}
+
 function loadLiveData() {
   fetch("https://worldcup26.ir/get/games", {
     headers: { "Authorization": "Bearer " + WC_TOKEN }
@@ -209,19 +285,27 @@ function loadLiveData() {
     document.getElementById("liveCount").textContent = liveCount;
     renderMarketplace();
     renderMatchList();
-    addLog("✓ Live data loaded — " + allGames.length + " matches");
+    addLog("✓ Live match data loaded — " + allGames.length + " matches");
   })
-  .catch(function(e) { addLog("Live data error: " + e.message); });
+  .catch(function(e) { addLog("Match data error: " + e.message); });
 }
 
-function getRarity(odds) {
-  if (odds <= 6) return { label: "LEGENDARY", cls: "rarity-legendary" };
-  if (odds <= 10) return { label: "EPIC", cls: "rarity-epic" };
-  if (odds <= 20) return { label: "RARE", cls: "rarity-rare" };
+function getEffectiveOdds(t) {
+  return t.txlineOdds || t.odds;
+}
+
+function getPrice(t) {
+  var odds = getEffectiveOdds(t);
+  return (1 / odds * 2).toFixed(3);
+}
+
+function getRarity(t) {
+  var odds = getEffectiveOdds(t);
+  if (odds <= 3) return { label: "LEGENDARY", cls: "rarity-legendary" };
+  if (odds <= 7) return { label: "EPIC", cls: "rarity-epic" };
+  if (odds <= 15) return { label: "RARE", cls: "rarity-rare" };
   return { label: "COMMON", cls: "rarity-common" };
 }
-
-function getPrice(odds) { return (1 / odds * 2).toFixed(3); }
 
 function getTrend(name) {
   var wins = hotTeams[name] || 0;
@@ -233,23 +317,29 @@ function getTrend(name) {
 }
 
 function cardHTML(t, i, mode) {
-  var rarity = getRarity(t.odds);
-  var price = getPrice(t.odds);
+  var rarity = getRarity(t);
+  var price = getPrice(t);
   var isOwned = minted[i];
   var isListed = swapListed[i];
   var isHot = (hotTeams[t.name] || 0) >= 2;
   var isLive = liveTeams[t.name];
   var isElim = eliminatedTeams[t.name];
+  var hasTxLine = !!t.txlineOdds;
 
-  var classes = "jersey-card" + (isOwned ? " owned" : "") + (isHot ? " hot" : "") + (isElim ? " eliminated" : "");
+  var classes = "jersey-card" + (isOwned ? " owned" : "") + (isHot ? " hot" : "") + (isElim ? " eliminated" : "") + (hasTxLine ? " live-odds" : "");
   var html = "<div class='" + classes + "'>";
   if (isHot) html += "<div class='hot-badge'>🔥 HOT</div>";
-  if (isLive && !isHot) html += "<div class='match-badge'>⚡ SOON</div>";
+  else if (hasTxLine) html += "<div class='odds-badge'>📊 LIVE</div>";
+  else if (isLive && !isHot) html += "<div class='match-badge'>⚡ SOON</div>";
   if (isElim && !isHot) html += "<div class='elim-badge'>OUT</div>";
 
   html += "<div class='jersey-img'><img src='" + t.img + "' onerror='this.style.display=\"none\"' loading='lazy'></div>";
   html += "<div class='jersey-team'>" + t.name + "</div>";
-  html += "<div class='jersey-odds'>Odds: " + t.odds.toFixed(1) + "x</div>";
+  if (t.txlineOdds) {
+    html += "<div class='jersey-txline-odds'>📊 " + t.txlineOdds.toFixed(2) + "x (TxLINE)</div>";
+  } else {
+    html += "<div class='jersey-odds'>Odds: " + t.odds.toFixed(1) + "x</div>";
+  }
   html += "<div class='jersey-value'>" + price + " SOL</div>";
   html += "<div class='jersey-trend'>" + getTrend(t.name) + "</div>";
   html += "<div class='jersey-rarity " + rarity.cls + "'>" + rarity.label + "</div>";
@@ -270,7 +360,14 @@ function cardHTML(t, i, mode) {
 
 function renderMarketplace() {
   var sorted = teams.map(function(t, i) { return { t: t, i: i }; });
-  sorted.sort(function(a, b) { return (hotTeams[b.t.name] || 0) - (hotTeams[a.t.name] || 0); });
+  sorted.sort(function(a, b) {
+    var aHot = hotTeams[a.t.name] || 0;
+    var bHot = hotTeams[b.t.name] || 0;
+    if (bHot !== aHot) return bHot - aHot;
+    var aLive = a.t.txlineOdds ? 1 : 0;
+    var bLive = b.t.txlineOdds ? 1 : 0;
+    return bLive - aLive;
+  });
   var html = "";
   sorted.forEach(function(obj) { html += cardHTML(obj.t, obj.i, "market"); });
   document.getElementById("jerseyGrid").innerHTML = html;
@@ -354,7 +451,7 @@ async function mintJersey(i) {
   if (!wallet) { addLog("Connect wallet first!"); return; }
   try {
     addLog("Minting " + teams[i].name + "...");
-    var txid = await sendTx("FanJerseySwap:mint:" + teams[i].name + ":odds=" + teams[i].odds);
+    var txid = await sendTx("FanJerseySwap:mint:" + teams[i].name + ":odds=" + getEffectiveOdds(teams[i]));
     minted[i] = txid;
     addLog("✓ Minted " + teams[i].name + "!");
     addLog('<a style="color:#a78bfa;" href="https://explorer.solana.com/tx/' + txid + '?cluster=devnet" target="_blank">' + txid.slice(0,20) + "...</a>");
@@ -426,8 +523,11 @@ document.getElementById("connectBtn").addEventListener("click", function() {
   }).catch(function(e) { addLog("Error: " + e.message); });
 });
 
+// Load everything
 loadLiveData();
+loadTxLineOdds();
 setInterval(loadLiveData, 300000);
+setInterval(loadTxLineOdds, 60000); // TxLINE odds refresh every minute
 </script>
 </body>
 </html>
