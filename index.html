@@ -19,8 +19,7 @@ button:hover { background: #e6b84d; }
 .jersey-card { background: #15301f; border: 1px solid #2a4a36; border-radius: 10px; padding: 15px; text-align: center; transition: all 0.2s; }
 .jersey-card:hover { border-color: #d4a843; transform: translateY(-2px); }
 .jersey-card.owned { border-color: #4a7a4a; }
-.jersey-img { height: 110px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
-.jersey-img img { width: 80px; height: 100px; object-fit: contain; }
+.jersey-img { height: 100px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
 .jersey-team { font-size: 13px; font-weight: bold; margin-bottom: 4px; }
 .jersey-odds { font-size: 11px; color: #b9c4ba; margin-bottom: 4px; }
 .jersey-value { font-size: 13px; color: #d4a843; font-weight: bold; margin-bottom: 8px; }
@@ -68,11 +67,9 @@ button:hover { background: #e6b84d; }
 <div id="marketplace" class="section active">
   <div class="grid" id="jerseyGrid"></div>
 </div>
-
 <div id="collection" class="section">
   <div class="grid" id="myGrid"></div>
 </div>
-
 <div id="swap" class="section">
   <div class="grid" id="swapGrid"></div>
 </div>
@@ -84,58 +81,68 @@ var wallet = null;
 var minted = {};
 var swapListed = {};
 var swapCount = 0;
-var CDN = "https://www.footballkitarchive.com/cdn/2026/03/23/75Zsv9iIPqFmSx1/";
 
 var teams = [
-  { name: "Algeria", emoji: "🇩🇿", odds: 70.0, img: CDN + "algeria-2026-home-kit.jpg" },
-  { name: "Argentina", emoji: "🇦🇷", odds: 5.5, img: CDN + "argentina-2026-home-kit.jpg" },
-  { name: "Australia", emoji: "🇦🇺", odds: 55.0, img: CDN + "australia-2026-home-kit.jpg" },
-  { name: "Austria", emoji: "🇦🇹", odds: 45.0, img: CDN + "austria-2026-home-kit.jpg" },
-  { name: "Belgium", emoji: "🇧🇪", odds: 10.0, img: CDN + "belgium-2026-home-kit.jpg" },
-  { name: "Bosnia", emoji: "🇧🇦", odds: 90.0, img: CDN + "bosnia-and-herzegovina-2026-home-kit.jpg" },
-  { name: "Brazil", emoji: "🇧🇷", odds: 4.5, img: CDN + "brazil-2026-home-kit.jpg" },
-  { name: "Canada", emoji: "🇨🇦", odds: 25.0, img: CDN + "canada-2026-home-kit.jpg" },
-  { name: "Cape Verde", emoji: "🇨🇻", odds: 130.0, img: CDN + "cape-verde-2026-home-kit.jpg" },
-  { name: "Colombia", emoji: "🇨🇴", odds: 22.0, img: CDN + "colombia-2026-home-kit.jpg" },
-  { name: "Croatia", emoji: "🇭🇷", odds: 40.0, img: CDN + "croatia-2026-home-kit.jpg" },
-  { name: "Curacao", emoji: "🇨🇼", odds: 200.0, img: CDN + "curacao-2026-home-kit.jpg" },
-  { name: "Czech Republic", emoji: "🇨🇿", odds: 60.0, img: CDN + "czech-republic-2026-home-kit.jpg" },
-  { name: "DR Congo", emoji: "🇨🇩", odds: 100.0, img: CDN + "democratic-republic-of-the-congo-2026-home-kit.jpg" },
-  { name: "Ecuador", emoji: "🇪🇨", odds: 50.0, img: CDN + "ecuador-2026-home-kit.jpg" },
-  { name: "Egypt", emoji: "🇪🇬", odds: 65.0, img: CDN + "egypt-2026-home-kit.jpg" },
-  { name: "England", emoji: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", odds: 6.0, img: CDN + "england-2026-home-kit.jpg" },
-  { name: "France", emoji: "🇫🇷", odds: 5.0, img: CDN + "france-2026-home-kit.jpg" },
-  { name: "Germany", emoji: "🇩🇪", odds: 7.0, img: CDN + "germany-2026-home-kit.jpg" },
-  { name: "Ghana", emoji: "🇬🇭", odds: 90.0, img: CDN + "ghana-2026-home-kit.jpg" },
-  { name: "Haiti", emoji: "🇭🇹", odds: 150.0, img: CDN + "haiti-2026-home-kit.jpg" },
-  { name: "Iran", emoji: "🇮🇷", odds: 75.0, img: CDN + "iran-2026-home-kit.jpg" },
-  { name: "Iraq", emoji: "🇮🇶", odds: 110.0, img: CDN + "iraq-2026-home-kit.jpg" },
-  { name: "Ivory Coast", emoji: "🇨🇮", odds: 45.0, img: CDN + "ivory-coast-2026-home-kit.jpg" },
-  { name: "Japan", emoji: "🇯🇵", odds: 35.0, img: CDN + "japan-2026-home-kit.jpg" },
-  { name: "Jordan", emoji: "🇯🇴", odds: 120.0, img: CDN + "jordan-2026-home-kit.jpg" },
-  { name: "Mexico", emoji: "🇲🇽", odds: 20.0, img: CDN + "mexico-2026-home-kit.jpg" },
-  { name: "Morocco", emoji: "🇲🇦", odds: 30.0, img: CDN + "morocco-2026-home-kit.jpg" },
-  { name: "Netherlands", emoji: "🇳🇱", odds: 9.0, img: CDN + "netherlands-2026-home-kit.jpg" },
-  { name: "New Zealand", emoji: "🇳🇿", odds: 120.0, img: CDN + "new-zealand-2026-home-kit.jpg" },
-  { name: "Norway", emoji: "🇳🇴", odds: 28.0, img: CDN + "norway-2026-home-kit.jpg" },
-  { name: "Panama", emoji: "🇵🇦", odds: 140.0, img: CDN + "panama-2026-home-kit.jpg" },
-  { name: "Paraguay", emoji: "🇵🇾", odds: 85.0, img: CDN + "paraguay-2026-home-kit.jpg" },
-  { name: "Portugal", emoji: "🇵🇹", odds: 8.0, img: CDN + "portugal-2026-home-kit.jpg" },
-  { name: "Qatar", emoji: "🇶🇦", odds: 100.0, img: CDN + "qatar-2026-home-kit.jpg" },
-  { name: "Saudi Arabia", emoji: "🇸🇦", odds: 80.0, img: CDN + "saudi-arabia-2026-home-kit.jpg" },
-  { name: "Scotland", emoji: "🏴󠁧󠁢󠁳󠁣󠁴󠁿", odds: 70.0, img: CDN + "scotland-2026-home-kit.jpg" },
-  { name: "Senegal", emoji: "🇸🇳", odds: 50.0, img: CDN + "senegal-2026-home-kit.jpg" },
-  { name: "South Africa", emoji: "🇿🇦", odds: 80.0, img: CDN + "south-africa-2026-home-kit.jpg" },
-  { name: "South Korea", emoji: "🇰🇷", odds: 35.0, img: CDN + "south-korea-2026-home-kit.jpg" },
-  { name: "Spain", emoji: "🇪🇸", odds: 6.5, img: CDN + "spain-2026-home-kit.jpg" },
-  { name: "Sweden", emoji: "🇸🇪", odds: 40.0, img: CDN + "sweden-2026-home-kit.jpg" },
-  { name: "Switzerland", emoji: "🇨🇭", odds: 22.0, img: CDN + "switzerland-2026-home-kit.jpg" },
-  { name: "Tunisia", emoji: "🇹🇳", odds: 95.0, img: CDN + "tunisia-2026-home-kit.jpg" },
-  { name: "Turkey", emoji: "🇹🇷", odds: 25.0, img: CDN + "turkiye-2026-home-kit.jpg" },
-  { name: "USA", emoji: "🇺🇸", odds: 15.0, img: CDN + "usa-2026-home-kit.jpg" },
-  { name: "Uruguay", emoji: "🇺🇾", odds: 30.0, img: CDN + "uruguay-2026-home-kit.jpg" },
-  { name: "Uzbekistan", emoji: "🇺🇿", odds: 110.0, img: CDN + "uzbekistan-2026-home-kit.jpg" }
+  { name: "Algeria", odds: 70.0, body: "#007749", sleeve: "#007749", band: "#FFFFFF" },
+  { name: "Argentina", odds: 5.5, body: "#75AADB", sleeve: "#75AADB", band: "#FFFFFF" },
+  { name: "Australia", odds: 55.0, body: "#00843D", sleeve: "#00843D", band: "#FFD700" },
+  { name: "Austria", odds: 45.0, body: "#ED2939", sleeve: "#ED2939", band: "#FFFFFF" },
+  { name: "Belgium", odds: 10.0, body: "#000000", sleeve: "#000000", band: "#EF3340" },
+  { name: "Bosnia", odds: 90.0, body: "#002395", sleeve: "#002395", band: "#FFCD00" },
+  { name: "Brazil", odds: 4.5, body: "#FFD700", sleeve: "#FFD700", band: "#009C3B" },
+  { name: "Canada", odds: 25.0, body: "#FF0000", sleeve: "#FF0000", band: "#FFFFFF" },
+  { name: "Cape Verde", odds: 130.0, body: "#003893", sleeve: "#003893", band: "#CF2027" },
+  { name: "Colombia", odds: 22.0, body: "#FCD116", sleeve: "#FCD116", band: "#003087" },
+  { name: "Croatia", odds: 40.0, body: "#FF0000", sleeve: "#FFFFFF", band: "#FF0000" },
+  { name: "Curacao", odds: 200.0, body: "#003DA5", sleeve: "#003DA5", band: "#FFD100" },
+  { name: "Czech Republic", odds: 60.0, body: "#D7141A", sleeve: "#D7141A", band: "#FFFFFF" },
+  { name: "DR Congo", odds: 100.0, body: "#007FFF", sleeve: "#007FFF", band: "#F7D618" },
+  { name: "Ecuador", odds: 50.0, body: "#FFD100", sleeve: "#FFD100", band: "#003893" },
+  { name: "Egypt", odds: 65.0, body: "#CE1126", sleeve: "#CE1126", band: "#FFFFFF" },
+  { name: "England", odds: 6.0, body: "#FFFFFF", sleeve: "#FFFFFF", band: "#CF081F" },
+  { name: "France", odds: 5.0, body: "#002395", sleeve: "#002395", band: "#FFFFFF" },
+  { name: "Germany", odds: 7.0, body: "#FFFFFF", sleeve: "#FFFFFF", band: "#000000" },
+  { name: "Ghana", odds: 90.0, body: "#FFFFFF", sleeve: "#FFFFFF", band: "#006B3F" },
+  { name: "Haiti", odds: 150.0, body: "#00209F", sleeve: "#00209F", band: "#D21034" },
+  { name: "Iran", odds: 75.0, body: "#239F40", sleeve: "#239F40", band: "#FFFFFF" },
+  { name: "Iraq", odds: 110.0, body: "#007A3D", sleeve: "#007A3D", band: "#FFFFFF" },
+  { name: "Ivory Coast", odds: 45.0, body: "#F77F00", sleeve: "#F77F00", band: "#009A44" },
+  { name: "Japan", odds: 35.0, body: "#003DA5", sleeve: "#003DA5", band: "#BC002D" },
+  { name: "Jordan", odds: 120.0, body: "#007A3D", sleeve: "#007A3D", band: "#FFFFFF" },
+  { name: "Mexico", odds: 20.0, body: "#006847", sleeve: "#006847", band: "#FFFFFF" },
+  { name: "Morocco", odds: 30.0, body: "#C1272D", sleeve: "#C1272D", band: "#006233" },
+  { name: "Netherlands", odds: 9.0, body: "#FF6600", sleeve: "#FF6600", band: "#FFFFFF" },
+  { name: "New Zealand", odds: 120.0, body: "#FFFFFF", sleeve: "#000000", band: "#FFFFFF" },
+  { name: "Norway", odds: 28.0, body: "#EF2B2D", sleeve: "#EF2B2D", band: "#FFFFFF" },
+  { name: "Panama", odds: 140.0, body: "#FFFFFF", sleeve: "#FFFFFF", band: "#DA121A" },
+  { name: "Paraguay", odds: 85.0, body: "#D52B1E", sleeve: "#D52B1E", band: "#FFFFFF" },
+  { name: "Portugal", odds: 8.0, body: "#006600", sleeve: "#006600", band: "#FF0000" },
+  { name: "Qatar", odds: 100.0, body: "#8D153A", sleeve: "#8D153A", band: "#FFFFFF" },
+  { name: "Saudi Arabia", odds: 80.0, body: "#006C35", sleeve: "#006C35", band: "#FFFFFF" },
+  { name: "Scotland", odds: 70.0, body: "#003F87", sleeve: "#003F87", band: "#FFFFFF" },
+  { name: "Senegal", odds: 50.0, body: "#FFFFFF", sleeve: "#FFFFFF", band: "#00853F" },
+  { name: "South Africa", odds: 80.0, body: "#007A4D", sleeve: "#007A4D", band: "#FFB81C" },
+  { name: "South Korea", odds: 35.0, body: "#CE1126", sleeve: "#CE1126", band: "#FFFFFF" },
+  { name: "Spain", odds: 6.5, body: "#AA151B", sleeve: "#AA151B", band: "#F1BF00" },
+  { name: "Sweden", odds: 40.0, body: "#006AA7", sleeve: "#006AA7", band: "#FECC02" },
+  { name: "Switzerland", odds: 22.0, body: "#FF0000", sleeve: "#FF0000", band: "#FFFFFF" },
+  { name: "Tunisia", odds: 95.0, body: "#E70013", sleeve: "#E70013", band: "#FFFFFF" },
+  { name: "Turkey", odds: 25.0, body: "#FFFFFF", sleeve: "#FFFFFF", band: "#E30A17" },
+  { name: "USA", odds: 15.0, body: "#002868", sleeve: "#BF0A30", band: "#FFFFFF" },
+  { name: "Uruguay", odds: 30.0, body: "#5EB6E4", sleeve: "#5EB6E4", band: "#FFFFFF" },
+  { name: "Uzbekistan", odds: 110.0, body: "#1EB53A", sleeve: "#1EB53A", band: "#FFFFFF" }
 ];
+
+function drawJersey(t) {
+  var b = t.body, s = t.sleeve, bd = t.band;
+  return '<svg width="75" height="90" viewBox="0 0 75 90">' +
+    '<path d="M28 4 L8 18 L3 38 L16 40 L16 82 L59 82 L59 40 L72 38 L67 18 L47 4 L40 10 L37 7 L34 10 Z" fill="' + b + '" stroke="#22222288" stroke-width="1.2"/>' +
+    '<path d="M28 4 L8 18 L3 38 L16 40 L16 24 L26 16 Z" fill="' + s + '" stroke="#22222288" stroke-width="1"/>' +
+    '<path d="M47 4 L67 18 L72 38 L59 40 L59 24 L49 16 Z" fill="' + s + '" stroke="#22222288" stroke-width="1"/>' +
+    '<rect x="16" y="30" width="43" height="14" fill="' + bd + '" opacity="0.85"/>' +
+    '<path d="M34 4 L34 10 L37 7 L40 10 L40 4 Q37 1 34 4 Z" fill="' + bd + '" stroke="#22222288" stroke-width="0.8"/>' +
+    '</svg>';
+}
 
 function getRarity(odds) {
   if (odds <= 6) return { label: "LEGENDARY", cls: "rarity-legendary" };
@@ -148,31 +155,42 @@ function getPrice(odds) {
   return (1 / odds * 2).toFixed(3);
 }
 
-function jerseyImgHTML(t) {
-  return "<div class='jersey-img'><img src='" + t.img + "' onerror='this.style.display=\"none\";this.nextElementSibling.style.display=\"block\"' style='width:80px; height:100px; object-fit:contain;'><div style='display:none; font-size:44px;'>" + t.emoji + "</div></div>";
-}
-
-function renderMarketplace() {
-  var html = "";
-  teams.forEach(function(t, i) {
-    var rarity = getRarity(t.odds);
-    var price = getPrice(t.odds);
-    var isOwned = minted[i];
-    html += "<div class='jersey-card" + (isOwned ? " owned" : "") + "'>";
-    html += jerseyImgHTML(t);
-    html += "<div class='jersey-team'>" + t.name + "</div>";
-    html += "<div class='jersey-odds'>Odds: " + t.odds + "x</div>";
-    html += "<div class='jersey-value'>" + price + " SOL</div>";
-    html += "<div class='jersey-rarity " + rarity.cls + "'>" + rarity.label + "</div>";
+function cardHTML(t, i, mode) {
+  var rarity = getRarity(t.odds);
+  var price = getPrice(t.odds);
+  var isOwned = minted[i];
+  var isListed = swapListed[i];
+  var html = "<div class='jersey-card" + (isOwned ? " owned" : "") + "'>";
+  html += "<div class='jersey-img'>" + drawJersey(t) + "</div>";
+  html += "<div class='jersey-team'>" + t.name + "</div>";
+  html += "<div class='jersey-odds'>Odds: " + t.odds + "x</div>";
+  html += "<div class='jersey-value'>" + price + " SOL</div>";
+  html += "<div class='jersey-rarity " + rarity.cls + "'>" + rarity.label + "</div>";
+  if (mode === "market") {
     if (isOwned) {
       html += "<div style='color:#6abf6a; font-size:11px; margin-bottom:5px;'>✓ Owned</div>";
     } else {
       html += "<button class='mint-btn' data-i='" + i + "'>Mint Jersey</button>";
     }
-    html += "</div>";
-  });
+  } else if (mode === "collection") {
+    if (isListed) {
+      html += "<div style='color:#d4a843; font-size:11px;'>Listed for Swap</div>";
+    } else {
+      html += "<button class='swap-btn' data-i='" + i + "'>List for Swap</button>";
+    }
+  } else if (mode === "swap") {
+    html += "<div style='color:#b9c4ba; font-size:11px; margin-bottom:5px;'>Listed by fan</div>";
+    html += "<button class='mint-btn' data-i='" + i + "'>Swap Now</button>";
+  }
+  html += "</div>";
+  return html;
+}
+
+function renderMarketplace() {
+  var html = "";
+  teams.forEach(function(t, i) { html += cardHTML(t, i, "market"); });
   document.getElementById("jerseyGrid").innerHTML = html;
-  document.querySelectorAll(".mint-btn").forEach(function(btn) {
+  document.querySelectorAll("#jerseyGrid .mint-btn").forEach(function(btn) {
     btn.addEventListener("click", function() { mintJersey(parseInt(btn.getAttribute("data-i"))); });
   });
   updateStats();
@@ -182,30 +200,11 @@ function renderCollection() {
   var html = "";
   var count = 0;
   teams.forEach(function(t, i) {
-    if (minted[i]) {
-      count++;
-      var rarity = getRarity(t.odds);
-      var price = getPrice(t.odds);
-      var isListed = swapListed[i];
-      html += "<div class='jersey-card owned'>";
-      html += jerseyImgHTML(t);
-      html += "<div class='jersey-team'>" + t.name + "</div>";
-      html += "<div class='jersey-odds'>Odds: " + t.odds + "x</div>";
-      html += "<div class='jersey-value'>" + price + " SOL</div>";
-      html += "<div class='jersey-rarity " + rarity.cls + "'>" + rarity.label + "</div>";
-      if (isListed) {
-        html += "<div style='color:#d4a843; font-size:11px;'>Listed for Swap</div>";
-      } else {
-        html += "<button class='swap-btn' data-i='" + i + "'>List for Swap</button>";
-      }
-      html += "</div>";
-    }
+    if (minted[i]) { count++; html += cardHTML(t, i, "collection"); }
   });
-  if (count === 0) {
-    html = "<div style='color:#b9c4ba; padding:20px;'>No jerseys yet. Mint some from the Marketplace!</div>";
-  }
+  if (count === 0) html = "<div style='color:#b9c4ba; padding:20px;'>No jerseys yet. Mint from Marketplace!</div>";
   document.getElementById("myGrid").innerHTML = html;
-  document.querySelectorAll(".swap-btn").forEach(function(btn) {
+  document.querySelectorAll("#myGrid .swap-btn").forEach(function(btn) {
     btn.addEventListener("click", function() { listForSwap(parseInt(btn.getAttribute("data-i"))); });
   });
 }
@@ -214,111 +213,64 @@ function renderSwapMarket() {
   var html = "";
   var count = 0;
   teams.forEach(function(t, i) {
-    if (swapListed[i]) {
-      count++;
-      var rarity = getRarity(t.odds);
-      var price = getPrice(t.odds);
-      html += "<div class='jersey-card'>";
-      html += jerseyImgHTML(t);
-      html += "<div class='jersey-team'>" + t.name + "</div>";
-      html += "<div class='jersey-odds'>Odds: " + t.odds + "x</div>";
-      html += "<div class='jersey-value'>" + price + " SOL</div>";
-      html += "<div class='jersey-rarity " + rarity.cls + "'>" + rarity.label + "</div>";
-      html += "<div style='color:#b9c4ba; font-size:11px; margin-bottom:5px;'>Listed by fan</div>";
-      html += "<button class='mint-btn' data-i='" + i + "'>Swap Now</button>";
-      html += "</div>";
-    }
+    if (swapListed[i]) { count++; html += cardHTML(t, i, "swap"); }
   });
-  if (count === 0) {
-    html = "<div style='color:#b9c4ba; padding:20px;'>No jerseys listed for swap yet.</div>";
-  }
+  if (count === 0) html = "<div style='color:#b9c4ba; padding:20px;'>No jerseys listed yet.</div>";
   document.getElementById("swapGrid").innerHTML = html;
   document.querySelectorAll("#swapGrid .mint-btn").forEach(function(btn) {
     btn.addEventListener("click", function() { swapJersey(parseInt(btn.getAttribute("data-i"))); });
   });
 }
 
+async function sendTx(memo) {
+  var connection = new solanaWeb3.Connection("https://api.devnet.solana.com", "confirmed");
+  var pubkey = wallet.publicKey;
+  var tx = new solanaWeb3.Transaction().add(
+    new solanaWeb3.TransactionInstruction({
+      keys: [{ pubkey: pubkey, isSigner: true, isWritable: false }],
+      programId: new solanaWeb3.PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"),
+      data: Buffer.from(memo)
+    })
+  );
+  tx.feePayer = pubkey;
+  var bh = await connection.getLatestBlockhash();
+  tx.recentBlockhash = bh.blockhash;
+  var signed = await wallet.signTransaction(tx);
+  return await connection.sendRawTransaction(signed.serialize());
+}
+
 async function mintJersey(i) {
   if (!wallet) { addLog("Connect wallet first!"); return; }
   try {
-    addLog("Minting " + teams[i].name + " jersey...");
-    var connection = new solanaWeb3.Connection("https://api.devnet.solana.com", "confirmed");
-    var pubkey = wallet.publicKey;
-    var memo = "FanJerseySwap:mint:" + teams[i].name + ":odds=" + teams[i].odds;
-    var tx = new solanaWeb3.Transaction().add(
-      new solanaWeb3.TransactionInstruction({
-        keys: [{ pubkey: pubkey, isSigner: true, isWritable: false }],
-        programId: new solanaWeb3.PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"),
-        data: Buffer.from(memo)
-      })
-    );
-    tx.feePayer = pubkey;
-    var blockhash = await connection.getLatestBlockhash();
-    tx.recentBlockhash = blockhash.blockhash;
-    var signed = await wallet.signTransaction(tx);
-    var txid = await connection.sendRawTransaction(signed.serialize());
+    addLog("Minting " + teams[i].name + "...");
+    var txid = await sendTx("FanJerseySwap:mint:" + teams[i].name + ":odds=" + teams[i].odds);
     minted[i] = txid;
-    addLog("✓ Minted " + teams[i].name + " jersey!");
+    addLog("✓ Minted " + teams[i].name + "!");
     addLog('<a style="color:#d4a843;" href="https://explorer.solana.com/tx/' + txid + '?cluster=devnet" target="_blank">' + txid.slice(0,20) + "...</a>");
-    renderMarketplace();
-    renderCollection();
-    updateStats();
+    renderMarketplace(); renderCollection(); updateStats();
   } catch(e) { addLog("Error: " + e.message); }
 }
 
 async function listForSwap(i) {
   if (!wallet) { addLog("Connect wallet first!"); return; }
   try {
-    addLog("Listing " + teams[i].name + " for swap...");
-    var connection = new solanaWeb3.Connection("https://api.devnet.solana.com", "confirmed");
-    var pubkey = wallet.publicKey;
-    var memo = "FanJerseySwap:list:" + teams[i].name;
-    var tx = new solanaWeb3.Transaction().add(
-      new solanaWeb3.TransactionInstruction({
-        keys: [{ pubkey: pubkey, isSigner: true, isWritable: false }],
-        programId: new solanaWeb3.PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"),
-        data: Buffer.from(memo)
-      })
-    );
-    tx.feePayer = pubkey;
-    var blockhash = await connection.getLatestBlockhash();
-    tx.recentBlockhash = blockhash.blockhash;
-    var signed = await wallet.signTransaction(tx);
-    var txid = await connection.sendRawTransaction(signed.serialize());
+    addLog("Listing " + teams[i].name + "...");
+    await sendTx("FanJerseySwap:list:" + teams[i].name);
     swapListed[i] = true;
-    addLog("✓ Listed " + teams[i].name + " for swap!");
-    renderCollection();
-    renderSwapMarket();
+    addLog("✓ Listed " + teams[i].name + "!");
+    renderCollection(); renderSwapMarket();
   } catch(e) { addLog("Error: " + e.message); }
 }
 
 async function swapJersey(i) {
   if (!wallet) { addLog("Connect wallet first!"); return; }
   try {
-    addLog("Swapping " + teams[i].name + " jersey...");
-    var connection = new solanaWeb3.Connection("https://api.devnet.solana.com", "confirmed");
-    var pubkey = wallet.publicKey;
-    var memo = "FanJerseySwap:swap:" + teams[i].name;
-    var tx = new solanaWeb3.Transaction().add(
-      new solanaWeb3.TransactionInstruction({
-        keys: [{ pubkey: pubkey, isSigner: true, isWritable: false }],
-        programId: new solanaWeb3.PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"),
-        data: Buffer.from(memo)
-      })
-    );
-    tx.feePayer = pubkey;
-    var blockhash = await connection.getLatestBlockhash();
-    tx.recentBlockhash = blockhash.blockhash;
-    var signed = await wallet.signTransaction(tx);
-    var txid = await connection.sendRawTransaction(signed.serialize());
-    swapListed[i] = false;
-    minted[i] = txid;
-    swapCount++;
-    addLog("✓ Swapped " + teams[i].name + " jersey!");
+    addLog("Swapping " + teams[i].name + "...");
+    var txid = await sendTx("FanJerseySwap:swap:" + teams[i].name);
+    swapListed[i] = false; minted[i] = txid; swapCount++;
+    addLog("✓ Swapped " + teams[i].name + "!");
     addLog('<a style="color:#d4a843;" href="https://explorer.solana.com/tx/' + txid + '?cluster=devnet" target="_blank">' + txid.slice(0,20) + "...</a>");
-    renderCollection();
-    renderSwapMarket();
-    updateStats();
+    renderCollection(); renderSwapMarket(); updateStats();
   } catch(e) { addLog("Error: " + e.message); }
 }
 
@@ -327,13 +279,9 @@ function updateStats() {
   document.getElementById("totalMinted").textContent = count;
   document.getElementById("totalOwned").textContent = count;
   document.getElementById("totalSwaps").textContent = swapCount;
-  var hotOdds = 999;
-  var hotTeam = "-";
+  var hotOdds = 999; var hotTeam = "-";
   teams.forEach(function(t, i) {
-    if (minted[i] && t.odds < hotOdds) {
-      hotOdds = t.odds;
-      hotTeam = t.name;
-    }
+    if (minted[i] && t.odds < hotOdds) { hotOdds = t.odds; hotTeam = t.name; }
   });
   document.getElementById("hotTeam").textContent = hotTeam;
 }
@@ -362,7 +310,7 @@ document.getElementById("connectBtn").addEventListener("click", function() {
     wallet = window.solana;
     document.getElementById("walletAddr").textContent = r.publicKey.toString().slice(0,8) + "...";
     document.getElementById("connectBtn").textContent = "Connected";
-    addLog("✓ Wallet connected: " + r.publicKey.toString().slice(0,8) + "...");
+    addLog("✓ Connected: " + r.publicKey.toString().slice(0,8) + "...");
   }).catch(function(e) { addLog("Error: " + e.message); });
 });
 
