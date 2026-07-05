@@ -52,8 +52,6 @@ button:hover { background: #6d28d9; }
 .filter-bar { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
 .filter-btn { padding: 6px 14px; background: #13132b; border: 1px solid #2d2d5e; border-radius: 20px; cursor: pointer; font-size: 11px; color: #7c7c9e; }
 .filter-btn.active { background: #7c3aed; color: #fff; border-color: #7c3aed; }
-.live-dot { display: inline-block; width: 6px; height: 6px; background: #10b981; border-radius: 50%; margin-right: 4px; animation: pulse 1s infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 </style>
 </head>
 <body>
@@ -130,7 +128,7 @@ var teams = [
   { name: "Colombia", odds: 22.0, img: RAW + "colombia.webp" },
   { name: "Croatia", odds: 40.0, img: RAW + "croatia.webp" },
   { name: "Curacao", odds: 200.0, img: RAW + "curacao.webp" },
-  { name: "Czech Republic", odds: 60.0, img: RAW + "c%CC%A7ekya.webp" },
+  { name: "Czech Republic", odds: 60.0, img: RAW + "cekya.webp" },
   { name: "DR Congo", odds: 100.0, img: RAW + "kongo.webp" },
   { name: "Ecuador", odds: 50.0, img: RAW + "ecuador.webp" },
   { name: "Egypt", odds: 65.0, img: RAW + "egypt.webp" },
@@ -140,32 +138,32 @@ var teams = [
   { name: "Ghana", odds: 90.0, img: RAW + "ghana.webp" },
   { name: "Haiti", odds: 150.0, img: RAW + "haiti.webp" },
   { name: "Iran", odds: 75.0, img: RAW + "iran.webp" },
-  { name: "Iraq", odds: 110.0, img: RAW + "%C4%B1rak.webp" },
-  { name: "Ivory Coast", odds: 45.0, img: RAW + "%C4%B1vorycoast.webp" },
+  { name: "Iraq", odds: 110.0, img: RAW + "irak.webp" },
+  { name: "Ivory Coast", odds: 45.0, img: RAW + "ivorycoast.webp" },
   { name: "Japan", odds: 35.0, img: RAW + "japan.webp" },
-  { name: "Jordan", odds: 120.0, img: RAW + "%C3%BCrd%C3%BCn.webp" },
+  { name: "Jordan", odds: 120.0, img: RAW + "jordan.webp" },
   { name: "Mexico", odds: 20.0, img: RAW + "meksika.webp" },
   { name: "Morocco", odds: 30.0, img: RAW + "morocco.webp" },
   { name: "Netherlands", odds: 9.0, img: RAW + "hollanda.webp" },
   { name: "New Zealand", odds: 120.0, img: RAW + "zelanda.webp" },
-  { name: "Norway", odds: 28.0, img: RAW + "norvec%CC%A7.webp" },
+  { name: "Norway", odds: 28.0, img: RAW + "norvec.webp" },
   { name: "Panama", odds: 140.0, img: RAW + "panama.webp" },
   { name: "Paraguay", odds: 85.0, img: RAW + "paraguay.webp" },
   { name: "Portugal", odds: 8.0, img: RAW + "portrkiz.webp" },
   { name: "Qatar", odds: 100.0, img: RAW + "katar.webp" },
   { name: "Saudi Arabia", odds: 80.0, img: RAW + "arabistan.webp" },
-  { name: "Scotland", odds: 70.0, img: RAW + "iskoc%CC%A7ya.webp" },
+  { name: "Scotland", odds: 70.0, img: RAW + "iskocya.webp" },
   { name: "Senegal", odds: 50.0, img: RAW + "senegal.webp" },
   { name: "South Africa", odds: 80.0, img: RAW + "southafrica.webp" },
   { name: "South Korea", odds: 35.0, img: RAW + "kore.webp" },
   { name: "Spain", odds: 6.5, img: RAW + "ispanya.webp" },
-  { name: "Sweden", odds: 40.0, img: RAW + "isvec%CC%A7.webp" },
-  { name: "Switzerland", odds: 22.0, img: RAW + "isvic%CC%A7re.webp" },
+  { name: "Sweden", odds: 40.0, img: RAW + "isvec.webp" },
+  { name: "Switzerland", odds: 22.0, img: RAW + "isvicre.webp" },
   { name: "Tunisia", odds: 95.0, img: RAW + "tunus.webp" },
-  { name: "Turkey", odds: 25.0, img: RAW + "tu%CC%88rkiye.webp" },
+  { name: "Turkey", odds: 25.0, img: RAW + "turkiye.webp" },
   { name: "USA", odds: 15.0, img: RAW + "usa.webp" },
   { name: "Uruguay", odds: 30.0, img: RAW + "uruguay.webp" },
-  { name: "Uzbekistan", odds: 110.0, img: RAW + "o%CC%88zbekistan.webp" }
+  { name: "Uzbekistan", odds: 110.0, img: RAW + "ozbekistan.webp" }
 ];
 
 function loadLiveData() {
@@ -186,11 +184,7 @@ function loadLiveData() {
       var hs = parseInt(g.home_score) || 0;
       var as = parseInt(g.away_score) || 0;
 
-      if (status === "notstarted") {
-        liveTeams[home] = true;
-        liveTeams[away] = true;
-        liveCount++;
-      }
+      if (status === "notstarted") { liveTeams[home] = true; liveTeams[away] = true; liveCount++; }
       if (status === "finished") {
         if (hs > as) hotTeams[home] = (hotTeams[home] || 0) + 1;
         else if (as > hs) hotTeams[away] = (hotTeams[away] || 0) + 1;
