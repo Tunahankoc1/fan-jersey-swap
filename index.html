@@ -117,7 +117,6 @@ var swapListed = {};
 var swapCount = 0;
 var liveTeams = {};
 var winnerTeams = {};
-var loserTeams = {};
 var eliminatedTeams = {};
 var txlineOdds = {};
 var allGames = [];
@@ -247,6 +246,22 @@ async function loadTxLineOdds() {
   }
 }
 
+function getKnockoutWinner(g) {
+  var hs = parseInt(g.home_score) || 0;
+  var as = parseInt(g.away_score) || 0;
+  var hPen = parseInt(g.home_penalty_score) || 0;
+  var aPen = parseInt(g.away_penalty_score) || 0;
+  var home = g.home_team_name_en;
+  var away = g.away_team_name_en;
+
+  if (hs > as) return { winner: home, loser: away };
+  if (as > hs) return { winner: away, loser: home };
+  // Draw — check penalty
+  if (hPen > aPen) return { winner: home, loser: away };
+  if (aPen > hPen) return { winner: away, loser: home };
+  return null;
+}
+
 function loadLiveData() {
   fetch("https://worldcup26.ir/get/games", {
     headers: { "Authorization": "Bearer " + WC_TOKEN }
@@ -254,7 +269,7 @@ function loadLiveData() {
   .then(function(res) { return res.json(); })
   .then(function(data) {
     allGames = data.games || [];
-    liveTeams = {}; winnerTeams = {}; loserTeams = {}; eliminatedTeams = {};
+    liveTeams = {}; winnerTeams = {}; eliminatedTeams = {};
 
     teams.forEach(function(t) {
       t.odds = BASE_ODDS[t.name] || 50;
@@ -285,30 +300,31 @@ function loadLiveData() {
         if (type === "group") {
           teamRecord[home].games++;
           teamRecord[away].games++;
+          if (hs > as) {
+            teamRecord[home].wins++;
+            teamRecord[home].goals += hs;
+            teamRecord[away].losses++;
+            winnerTeams[home] = (winnerTeams[home] || 0) + 1;
+          } else if (as > hs) {
+            teamRecord[away].wins++;
+            teamRecord[away].goals += as;
+            teamRecord[home].losses++;
+            winnerTeams[away] = (winnerTeams[away] || 0) + 1;
+          }
         }
 
-        if (hs > as) {
-          teamRecord[home].wins++;
-          teamRecord[home].goals += hs;
-          teamRecord[away].losses++;
-          winnerTeams[home] = (winnerTeams[home] || 0) + 1;
-          // Knockout: loser is eliminated
-          if (KNOCKOUT_TYPES.indexOf(type) !== -1) {
-            eliminatedTeams[away] = true;
-          }
-        } else if (as > hs) {
-          teamRecord[away].wins++;
-          teamRecord[away].goals += as;
-          teamRecord[home].losses++;
-          winnerTeams[away] = (winnerTeams[away] || 0) + 1;
-          if (KNOCKOUT_TYPES.indexOf(type) !== -1) {
-            eliminatedTeams[home] = true;
+        // Knockout — including penalties
+        if (KNOCKOUT_TYPES.indexOf(type) !== -1) {
+          var result = getKnockoutWinner(g);
+          if (result) {
+            eliminatedTeams[result.loser] = true;
+            winnerTeams[result.winner] = (winnerTeams[result.winner] || 0) + 1;
           }
         }
       }
     });
 
-    // Group stage elimination (0 wins in 3 games)
+    // Group stage elimination
     Object.keys(teamRecord).forEach(function(name) {
       var r = teamRecord[name];
       if (r.games >= 3 && r.wins === 0) {
@@ -316,30 +332,24 @@ function loadLiveData() {
       }
     });
 
-    // Update odds based on results
+    // Update odds
     teams.forEach(function(t) {
       var record = teamRecord[t.name];
-      if (!record) return;
-
-      var wins = record.wins;
-      var losses = record.losses;
-      var goals = record.goals;
-      var isUnderdog = BASE_ODDS[t.name] > 15;
-
       if (eliminatedTeams[t.name]) {
         t.odds = BASE_ODDS[t.name] * 2;
         return;
       }
-
+      if (!record) return;
+      var wins = record.wins;
+      var goals = record.goals;
+      var isUnderdog = BASE_ODDS[t.name] > 15;
       if (wins > 0) {
         if (isUnderdog) {
           t.odds = Math.max(BASE_ODDS[t.name] * 0.2 - (goals * 0.5), 1.5);
         } else {
           t.odds = Math.max(BASE_ODDS[t.name] * 0.7, 2.0);
         }
-      }
-
-      if (losses > 0 && wins === 0) {
+      } else if (record.losses > 0) {
         var isFavorite = BASE_ODDS[t.name] <= 10;
         t.odds = isFavorite ? BASE_ODDS[t.name] * 3 : BASE_ODDS[t.name] * 1.5;
       }
@@ -370,9 +380,9 @@ function getTrend(name) {
   var txOdds = txlineOdds[name];
   var isUnderdog = BASE_ODDS[name] > 15;
   if (eliminatedTeams[name]) return '<span style="color:#ef4444;">❌ Eliminated</span>';
-  if (wins >= 2) return '<span style="color:#f59e0b;">🔥 ' + wins + ' wins — RISING!</span>';
+  if (wins >= 3) return '<span style="color:#f59e0b;">🔥 ' + wins + ' wins — HOT!</span>';
   if (wins >= 1 && isUnderdog) return '<span style="color:#10b981;">⚡ UPSET! Value surging</span>';
-  if (wins >= 1) return '<span style="color:#10b981;">▲ ' + wins + ' win</span>';
+  if (wins >= 1) return '<span style="color:#10b981;">▲ ' + wins + ' win(s)</span>';
   if (txOdds) return '<span style="color:#10b981;">📊 Live: ' + txOdds.toFixed(2) + 'x</span>';
   if (liveTeams[name]) return '<span style="color:#f59e0b;">⚡ Playing soon</span>';
   return '<span style="color:#7c7c9e;">— Stable</span>';
@@ -384,7 +394,7 @@ function cardHTML(t, i, mode) {
   var isOwned = minted[i];
   var isListed = swapListed[i];
   var wins = winnerTeams[t.name] || 0;
-  var isHot = wins >= 2;
+  var isHot = wins >= 3;
   var isWinner = wins >= 1;
   var isElim = eliminatedTeams[t.name];
   var hasTxLine = !!t.txlineOdds;
@@ -402,19 +412,17 @@ function cardHTML(t, i, mode) {
   if (isElim) html += "<div class='elim-badge'>❌ OUT</div>";
   else if (isHot) html += "<div class='hot-badge'>🔥 " + wins + " WINS</div>";
   else if (isUpset) html += "<div class='winner-badge'>⚡ UPSET!</div>";
-  else if (isWinner) html += "<div class='winner-badge'>✓ WIN</div>";
+  else if (isWinner) html += "<div class='winner-badge'>✓ " + wins + " WIN</div>";
   else if (hasTxLine) html += "<div class='odds-badge'>📊 LIVE</div>";
   else if (liveTeams[t.name]) html += "<div class='match-badge'>⚡ SOON</div>";
 
   html += "<div class='jersey-img'><img src='" + t.img + "' onerror='this.style.display=\"none\"' loading='lazy'></div>";
   html += "<div class='jersey-team'>" + t.name + "</div>";
-
   if (t.txlineOdds) {
     html += "<div class='jersey-txline-odds'>📊 " + t.txlineOdds.toFixed(2) + "x (TxLINE)</div>";
   } else {
     html += "<div class='jersey-odds'>Odds: " + getEffectiveOdds(t).toFixed(1) + "x</div>";
   }
-
   html += "<div class='jersey-value'>" + price + " SOL</div>";
   html += "<div class='jersey-trend'>" + getTrend(t.name) + "</div>";
   html += "<div class='jersey-rarity " + rarity.cls + "'>" + rarity.label + "</div>";
@@ -436,7 +444,6 @@ function cardHTML(t, i, mode) {
 function renderMarketplace() {
   var sorted = teams.map(function(t, i) { return { t: t, i: i }; });
   sorted.sort(function(a, b) {
-    // Active teams first, eliminated last
     var aElim = eliminatedTeams[a.t.name] ? 1 : 0;
     var bElim = eliminatedTeams[b.t.name] ? 1 : 0;
     if (aElim !== bElim) return aElim - bElim;
@@ -486,12 +493,17 @@ function renderMatchList() {
     var scoreHTML = status === "notstarted"
       ? '<div class="match-score" style="font-size:14px; color:#7c7c9e;">VS</div>'
       : '<div class="match-score">' + g.home_score + ' - ' + g.away_score + '</div>';
+    var penHTML = "";
+    if (g.home_penalty_score && g.away_penalty_score) {
+      penHTML = '<div class="match-info" style="color:#f59e0b;">Pen: ' + g.home_penalty_score + ' - ' + g.away_penalty_score + '</div>';
+    }
 
     html += '<div class="match-card ' + cardClass + '">';
     html += '<div><div class="match-teams">' + (g.home_team_name_en || "TBD") + '</div></div>';
     html += scoreHTML;
     html += '<div><div class="match-teams" style="text-align:right;">' + (g.away_team_name_en || "TBD") + '</div>';
     html += '<div class="match-info">' + statusHTML + '</div>';
+    html += penHTML;
     html += '<div class="match-info">' + (g.local_date || "") + '</div>';
     html += '<div class="match-info" style="color:#a78bfa;">' + (g.group || "") + '</div></div>';
     html += '</div>';
