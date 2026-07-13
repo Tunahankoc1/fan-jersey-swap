@@ -20,7 +20,7 @@ button:hover { background: #6d28d9; }
 .jersey-card:hover { border-color: #a78bfa; transform: translateY(-2px); }
 .jersey-card.owned { border-color: #4f46e5; box-shadow: 0 0 8px #4f46e540; }
 .jersey-card.hot { border-color: #f59e0b; box-shadow: 0 0 12px #f59e0b60; }
-.jersey-card.eliminated { opacity: 0.5; }
+.jersey-card.eliminated { opacity: 0.4; filter: grayscale(50%); }
 .jersey-card.live-odds { border-color: #10b981; }
 .jersey-card.winner { border-color: #10b981; box-shadow: 0 0 12px #10b98160; }
 .hot-badge { position: absolute; top: 8px; right: 8px; background: #f59e0b; color: #000; font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 10px; }
@@ -80,7 +80,7 @@ button:hover { background: #6d28d9; }
   <div class="stat"><div class="stat-val" id="totalOwned">0</div><div>My Jerseys</div></div>
   <div class="stat"><div class="stat-val" id="totalSwaps">0</div><div>Swaps</div></div>
   <div class="stat"><div class="stat-val" id="hotTeam">-</div><div>🔥 Hottest</div></div>
-  <div class="stat"><div class="stat-val" id="liveCount">0</div><div>Upcoming</div></div>
+  <div class="stat"><div class="stat-val" id="elimCount">0</div><div>Eliminated</div></div>
 </div>
 
 <div class="tabs">
@@ -127,6 +127,7 @@ var RAW = "https://raw.githubusercontent.com/Tunahankoc1/fan-jersey-swap/main/";
 var TXLINE = "https://txline-dev.txodds.com";
 var TXLINE_TOKEN = "txoracle_api_e44c346212fe433c8b42b4bae17ce33d";
 var txlineJwt = null;
+var KNOCKOUT_TYPES = ["r32", "r16", "qf", "sf", "final"];
 
 var FIXTURES = [
   { id: 18187298, home: "Brazil", away: "Norway" },
@@ -218,7 +219,6 @@ async function loadTxLineOdds() {
   try {
     var jwt = await getTxLineJwt();
     var oddsBar = [];
-
     for (var i = 0; i < FIXTURES.length; i++) {
       var f = FIXTURES[i];
       var res = await fetch(TXLINE + "/api/odds/snapshot/" + f.id, {
@@ -238,11 +238,9 @@ async function loadTxLineOdds() {
         });
       }
     }
-
     document.getElementById("txlineBar").innerHTML = oddsBar.length > 0
       ? "🟢 TxLINE Live Odds: " + oddsBar.join(" &nbsp;|&nbsp; ")
       : "🟡 TxLINE: Matches finished — prices based on results";
-
     renderMarketplace();
   } catch(e) {
     document.getElementById("txlineBar").innerHTML = "🔴 TxLINE error: " + e.message;
@@ -294,16 +292,31 @@ function loadLiveData() {
           teamRecord[home].goals += hs;
           teamRecord[away].losses++;
           winnerTeams[home] = (winnerTeams[home] || 0) + 1;
+          // Knockout: loser is eliminated
+          if (KNOCKOUT_TYPES.indexOf(type) !== -1) {
+            eliminatedTeams[away] = true;
+          }
         } else if (as > hs) {
           teamRecord[away].wins++;
           teamRecord[away].goals += as;
           teamRecord[home].losses++;
           winnerTeams[away] = (winnerTeams[away] || 0) + 1;
+          if (KNOCKOUT_TYPES.indexOf(type) !== -1) {
+            eliminatedTeams[home] = true;
+          }
         }
       }
     });
 
-    // Update odds + eliminated
+    // Group stage elimination (0 wins in 3 games)
+    Object.keys(teamRecord).forEach(function(name) {
+      var r = teamRecord[name];
+      if (r.games >= 3 && r.wins === 0) {
+        eliminatedTeams[name] = true;
+      }
+    });
+
+    // Update odds based on results
     teams.forEach(function(t) {
       var record = teamRecord[t.name];
       if (!record) return;
@@ -311,17 +324,14 @@ function loadLiveData() {
       var wins = record.wins;
       var losses = record.losses;
       var goals = record.goals;
-      var games = record.games;
       var isUnderdog = BASE_ODDS[t.name] > 15;
 
-      // Eliminated: 3 group games, 0 wins
-      if (games >= 3 && wins === 0) {
-        eliminatedTeams[t.name] = true;
+      if (eliminatedTeams[t.name]) {
         t.odds = BASE_ODDS[t.name] * 2;
+        return;
       }
 
       if (wins > 0) {
-        winnerTeams[t.name] = wins;
         if (isUnderdog) {
           t.odds = Math.max(BASE_ODDS[t.name] * 0.2 - (goals * 0.5), 1.5);
         } else {
@@ -330,18 +340,18 @@ function loadLiveData() {
       }
 
       if (losses > 0 && wins === 0) {
-        loserTeams[t.name] = losses;
         var isFavorite = BASE_ODDS[t.name] <= 10;
         t.odds = isFavorite ? BASE_ODDS[t.name] * 3 : BASE_ODDS[t.name] * 1.5;
       }
     });
 
-    document.getElementById("liveCount").textContent = liveCount;
+    var elimCount = Object.keys(eliminatedTeams).length;
+    document.getElementById("elimCount").textContent = elimCount;
     renderMarketplace();
     renderMatchList();
-    addLog("✓ Live data loaded — " + allGames.length + " matches | " + Object.keys(eliminatedTeams).length + " eliminated");
+    addLog("✓ Data loaded — " + allGames.length + " matches | " + elimCount + " eliminated");
   })
-  .catch(function(e) { addLog("Match data error: " + e.message); });
+  .catch(function(e) { addLog("Error: " + e.message); });
 }
 
 function getEffectiveOdds(t) { return t.txlineOdds || t.odds; }
@@ -359,10 +369,10 @@ function getTrend(name) {
   var wins = winnerTeams[name] || 0;
   var txOdds = txlineOdds[name];
   var isUnderdog = BASE_ODDS[name] > 15;
+  if (eliminatedTeams[name]) return '<span style="color:#ef4444;">❌ Eliminated</span>';
   if (wins >= 2) return '<span style="color:#f59e0b;">🔥 ' + wins + ' wins — RISING!</span>';
   if (wins >= 1 && isUnderdog) return '<span style="color:#10b981;">⚡ UPSET! Value surging</span>';
   if (wins >= 1) return '<span style="color:#10b981;">▲ ' + wins + ' win</span>';
-  if (eliminatedTeams[name]) return '<span style="color:#ef4444;">❌ Eliminated</span>';
   if (txOdds) return '<span style="color:#10b981;">📊 Live: ' + txOdds.toFixed(2) + 'x</span>';
   if (liveTeams[name]) return '<span style="color:#f59e0b;">⚡ Playing soon</span>';
   return '<span style="color:#7c7c9e;">— Stable</span>';
@@ -383,16 +393,16 @@ function cardHTML(t, i, mode) {
 
   var classes = "jersey-card";
   if (isOwned) classes += " owned";
-  if (isHot) classes += " hot";
-  else if (isWinner) classes += " winner";
   if (isElim) classes += " eliminated";
-  else if (hasTxLine && !isWinner) classes += " live-odds";
+  else if (isHot) classes += " hot";
+  else if (isWinner) classes += " winner";
+  else if (hasTxLine) classes += " live-odds";
 
   var html = "<div class='" + classes + "'>";
-  if (isHot) html += "<div class='hot-badge'>🔥 " + wins + " WINS</div>";
+  if (isElim) html += "<div class='elim-badge'>❌ OUT</div>";
+  else if (isHot) html += "<div class='hot-badge'>🔥 " + wins + " WINS</div>";
   else if (isUpset) html += "<div class='winner-badge'>⚡ UPSET!</div>";
   else if (isWinner) html += "<div class='winner-badge'>✓ WIN</div>";
-  else if (isElim) html += "<div class='elim-badge'>❌ OUT</div>";
   else if (hasTxLine) html += "<div class='odds-badge'>📊 LIVE</div>";
   else if (liveTeams[t.name]) html += "<div class='match-badge'>⚡ SOON</div>";
 
@@ -426,6 +436,10 @@ function cardHTML(t, i, mode) {
 function renderMarketplace() {
   var sorted = teams.map(function(t, i) { return { t: t, i: i }; });
   sorted.sort(function(a, b) {
+    // Active teams first, eliminated last
+    var aElim = eliminatedTeams[a.t.name] ? 1 : 0;
+    var bElim = eliminatedTeams[b.t.name] ? 1 : 0;
+    if (aElim !== bElim) return aElim - bElim;
     var aWins = winnerTeams[a.t.name] || 0;
     var bWins = winnerTeams[b.t.name] || 0;
     if (bWins !== aWins) return bWins - aWins;
@@ -552,7 +566,9 @@ function updateStats() {
   document.getElementById("totalSwaps").textContent = swapCount;
   var hotName = "-"; var maxWins = 0;
   Object.keys(winnerTeams).forEach(function(name) {
-    if (winnerTeams[name] > maxWins) { maxWins = winnerTeams[name]; hotName = name; }
+    if (!eliminatedTeams[name] && winnerTeams[name] > maxWins) {
+      maxWins = winnerTeams[name]; hotName = name;
+    }
   });
   document.getElementById("hotTeam").textContent = hotName;
 }
