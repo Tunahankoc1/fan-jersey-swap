@@ -131,27 +131,26 @@ var txlineJwt = null;
 var FIXTURES = [
   { id: 18187298, home: "Brazil", away: "Norway" },
   { id: 18192996, home: "Mexico", away: "England" },
-  { id: 18193785, home: "USA", away: "Belgium" },
+  { id: 18193785, home: "United States", away: "Belgium" },
   { id: 18198205, home: "Portugal", away: "Spain" },
   { id: 18202701, home: "Argentina", away: "Egypt" },
   { id: 18202783, home: "Switzerland", away: "Colombia" },
   { id: 18209181, home: "France", away: "Morocco" }
 ];
 
-// Base odds — reset her seferinde
 var BASE_ODDS = {
   "Algeria": 70.0, "Argentina": 5.5, "Australia": 55.0, "Austria": 45.0,
-  "Belgium": 10.0, "Bosnia": 90.0, "Brazil": 4.5, "Canada": 25.0,
-  "Cape Verde": 130.0, "Colombia": 22.0, "Croatia": 40.0, "Curacao": 200.0,
-  "Czech Republic": 60.0, "DR Congo": 100.0, "Ecuador": 50.0, "Egypt": 65.0,
-  "England": 6.0, "France": 5.0, "Germany": 7.0, "Ghana": 90.0,
+  "Belgium": 10.0, "Bosnia and Herzegovina": 90.0, "Brazil": 4.5, "Canada": 25.0,
+  "Cape Verde": 130.0, "Colombia": 22.0, "Croatia": 40.0, "Curaçao": 200.0,
+  "Czech Republic": 60.0, "Democratic Republic of the Congo": 100.0, "Ecuador": 50.0,
+  "Egypt": 65.0, "England": 6.0, "France": 5.0, "Germany": 7.0, "Ghana": 90.0,
   "Haiti": 150.0, "Iran": 75.0, "Iraq": 110.0, "Ivory Coast": 45.0,
   "Japan": 35.0, "Jordan": 120.0, "Mexico": 20.0, "Morocco": 30.0,
   "Netherlands": 9.0, "New Zealand": 120.0, "Norway": 28.0, "Panama": 140.0,
   "Paraguay": 85.0, "Portugal": 8.0, "Qatar": 100.0, "Saudi Arabia": 80.0,
   "Scotland": 70.0, "Senegal": 50.0, "South Africa": 80.0, "South Korea": 35.0,
   "Spain": 6.5, "Sweden": 40.0, "Switzerland": 22.0, "Tunisia": 95.0,
-  "Turkey": 25.0, "USA": 15.0, "Uruguay": 30.0, "Uzbekistan": 110.0
+  "Turkey": 25.0, "United States": 15.0, "Uruguay": 30.0, "Uzbekistan": 110.0
 };
 
 var teams = [
@@ -160,15 +159,15 @@ var teams = [
   { name: "Australia", img: RAW + "australia.webp" },
   { name: "Austria", img: RAW + "austria.webp" },
   { name: "Belgium", img: RAW + "belgium.webp" },
-  { name: "Bosnia", img: RAW + "bosna.webp" },
+  { name: "Bosnia and Herzegovina", img: RAW + "bosna.webp" },
   { name: "Brazil", img: RAW + "brazil.webp" },
   { name: "Canada", img: RAW + "canada.webp" },
   { name: "Cape Verde", img: RAW + "capoverde.webp" },
   { name: "Colombia", img: RAW + "colombia.webp" },
   { name: "Croatia", img: RAW + "croatia.webp" },
-  { name: "Curacao", img: RAW + "curacao.webp" },
+  { name: "Curaçao", img: RAW + "curacao.webp" },
   { name: "Czech Republic", img: RAW + "czech.webp" },
-  { name: "DR Congo", img: RAW + "kongo.webp" },
+  { name: "Democratic Republic of the Congo", img: RAW + "kongo.webp" },
   { name: "Ecuador", img: RAW + "ecuador.webp" },
   { name: "Egypt", img: RAW + "egypt.webp" },
   { name: "England", img: RAW + "england.webp" },
@@ -200,12 +199,11 @@ var teams = [
   { name: "Switzerland", img: RAW + "switzerland.webp" },
   { name: "Tunisia", img: RAW + "tunus.webp" },
   { name: "Turkey", img: RAW + "turkey.webp" },
-  { name: "USA", img: RAW + "usa.webp" },
+  { name: "United States", img: RAW + "usa.webp" },
   { name: "Uruguay", img: RAW + "uruguay.webp" },
   { name: "Uzbekistan", img: RAW + "uzbekistan.webp" }
 ];
 
-// Initialize odds from base
 teams.forEach(function(t) { t.odds = BASE_ODDS[t.name] || 50; });
 
 async function getTxLineJwt() {
@@ -260,14 +258,13 @@ function loadLiveData() {
     allGames = data.games || [];
     liveTeams = {}; winnerTeams = {}; loserTeams = {}; eliminatedTeams = {};
 
-    // Reset odds to base
     teams.forEach(function(t) {
       t.odds = BASE_ODDS[t.name] || 50;
       t.txlineOdds = null;
     });
 
     var liveCount = 0;
-    var teamRecord = {}; // { wins, losses, goals }
+    var teamRecord = {};
 
     allGames.forEach(function(g) {
       var home = g.home_team_name_en;
@@ -275,6 +272,7 @@ function loadLiveData() {
       var status = g.time_elapsed;
       var hs = parseInt(g.home_score) || 0;
       var as = parseInt(g.away_score) || 0;
+      var type = g.type || "";
 
       if (status === "notstarted") {
         liveTeams[home] = true;
@@ -283,22 +281,29 @@ function loadLiveData() {
       }
 
       if (status === "finished") {
-        if (!teamRecord[home]) teamRecord[home] = { wins: 0, losses: 0, goals: 0 };
-        if (!teamRecord[away]) teamRecord[away] = { wins: 0, losses: 0, goals: 0 };
+        if (!teamRecord[home]) teamRecord[home] = { wins: 0, losses: 0, goals: 0, games: 0 };
+        if (!teamRecord[away]) teamRecord[away] = { wins: 0, losses: 0, goals: 0, games: 0 };
+
+        if (type === "group") {
+          teamRecord[home].games++;
+          teamRecord[away].games++;
+        }
 
         if (hs > as) {
           teamRecord[home].wins++;
           teamRecord[home].goals += hs;
           teamRecord[away].losses++;
+          winnerTeams[home] = (winnerTeams[home] || 0) + 1;
         } else if (as > hs) {
           teamRecord[away].wins++;
           teamRecord[away].goals += as;
           teamRecord[home].losses++;
+          winnerTeams[away] = (winnerTeams[away] || 0) + 1;
         }
       }
     });
 
-    // Update odds based on results
+    // Update odds + eliminated
     teams.forEach(function(t) {
       var record = teamRecord[t.name];
       if (!record) return;
@@ -306,48 +311,41 @@ function loadLiveData() {
       var wins = record.wins;
       var losses = record.losses;
       var goals = record.goals;
+      var games = record.games;
+      var isUnderdog = BASE_ODDS[t.name] > 15;
+
+      // Eliminated: 3 group games, 0 wins
+      if (games >= 3 && wins === 0) {
+        eliminatedTeams[t.name] = true;
+        t.odds = BASE_ODDS[t.name] * 2;
+      }
 
       if (wins > 0) {
         winnerTeams[t.name] = wins;
-        // Underdog winner gets much bigger boost
-        var isUnderdog = BASE_ODDS[t.name] > 15;
         if (isUnderdog) {
-          // Underdog kazandı → büyük fiyat artışı
           t.odds = Math.max(BASE_ODDS[t.name] * 0.2 - (goals * 0.5), 1.5);
         } else {
-          // Favori kazandı → küçük artış
           t.odds = Math.max(BASE_ODDS[t.name] * 0.7, 2.0);
         }
       }
 
       if (losses > 0 && wins === 0) {
         loserTeams[t.name] = losses;
-        // Favori kaybetti → büyük fiyat düşüşü
         var isFavorite = BASE_ODDS[t.name] <= 10;
-        if (isFavorite) {
-          t.odds = BASE_ODDS[t.name] * 3; // Büyük düşüş
-        } else {
-          t.odds = BASE_ODDS[t.name] * 1.5;
-        }
-        if (losses >= 3) eliminatedTeams[t.name] = true;
+        t.odds = isFavorite ? BASE_ODDS[t.name] * 3 : BASE_ODDS[t.name] * 1.5;
       }
     });
 
     document.getElementById("liveCount").textContent = liveCount;
     renderMarketplace();
     renderMatchList();
-    addLog("✓ Live data loaded — " + allGames.length + " matches");
+    addLog("✓ Live data loaded — " + allGames.length + " matches | " + Object.keys(eliminatedTeams).length + " eliminated");
   })
   .catch(function(e) { addLog("Match data error: " + e.message); });
 }
 
-function getEffectiveOdds(t) {
-  return t.txlineOdds || t.odds;
-}
-
-function getPrice(t) {
-  return (1 / getEffectiveOdds(t) * 2).toFixed(3);
-}
+function getEffectiveOdds(t) { return t.txlineOdds || t.odds; }
+function getPrice(t) { return (1 / getEffectiveOdds(t) * 2).toFixed(3); }
 
 function getRarity(t) {
   var odds = getEffectiveOdds(t);
@@ -359,15 +357,12 @@ function getRarity(t) {
 
 function getTrend(name) {
   var wins = winnerTeams[name] || 0;
-  var losses = loserTeams[name] || 0;
   var txOdds = txlineOdds[name];
   var isUnderdog = BASE_ODDS[name] > 15;
-
   if (wins >= 2) return '<span style="color:#f59e0b;">🔥 ' + wins + ' wins — RISING!</span>';
-  if (wins >= 1 && isUnderdog) return '<span style="color:#10b981;">▲ UPSET! Value x' + Math.round(BASE_ODDS[name] / getEffectiveOdds({name:name, odds: BASE_ODDS[name]*0.2})) + '</span>';
+  if (wins >= 1 && isUnderdog) return '<span style="color:#10b981;">⚡ UPSET! Value surging</span>';
   if (wins >= 1) return '<span style="color:#10b981;">▲ ' + wins + ' win</span>';
-  if (losses >= 1 && !isUnderdog) return '<span style="color:#ef4444;">▼ Upset loss — value dropped</span>';
-  if (eliminatedTeams[name]) return '<span style="color:#ef4444;">▼ Eliminated</span>';
+  if (eliminatedTeams[name]) return '<span style="color:#ef4444;">❌ Eliminated</span>';
   if (txOdds) return '<span style="color:#10b981;">📊 Live: ' + txOdds.toFixed(2) + 'x</span>';
   if (liveTeams[name]) return '<span style="color:#f59e0b;">⚡ Playing soon</span>';
   return '<span style="color:#7c7c9e;">— Stable</span>';
@@ -381,7 +376,6 @@ function cardHTML(t, i, mode) {
   var wins = winnerTeams[t.name] || 0;
   var isHot = wins >= 2;
   var isWinner = wins >= 1;
-  var isLive = liveTeams[t.name];
   var isElim = eliminatedTeams[t.name];
   var hasTxLine = !!t.txlineOdds;
   var isUnderdog = BASE_ODDS[t.name] > 15;
@@ -398,9 +392,9 @@ function cardHTML(t, i, mode) {
   if (isHot) html += "<div class='hot-badge'>🔥 " + wins + " WINS</div>";
   else if (isUpset) html += "<div class='winner-badge'>⚡ UPSET!</div>";
   else if (isWinner) html += "<div class='winner-badge'>✓ WIN</div>";
-  else if (isElim) html += "<div class='elim-badge'>OUT</div>";
+  else if (isElim) html += "<div class='elim-badge'>❌ OUT</div>";
   else if (hasTxLine) html += "<div class='odds-badge'>📊 LIVE</div>";
-  else if (isLive) html += "<div class='match-badge'>⚡ SOON</div>";
+  else if (liveTeams[t.name]) html += "<div class='match-badge'>⚡ SOON</div>";
 
   html += "<div class='jersey-img'><img src='" + t.img + "' onerror='this.style.display=\"none\"' loading='lazy'></div>";
   html += "<div class='jersey-team'>" + t.name + "</div>";
